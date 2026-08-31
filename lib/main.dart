@@ -15,7 +15,7 @@ class NjazApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       locale: const Locale('ar'),
       // دعم العربية وواجهة من اليمين لليسار بدون أي حزم إضافية
-      localizationsDelegates: const [
+      localizationsDelegates: [
         DefaultMaterialLocalizations.delegate,
         DefaultWidgetsLocalizations.delegate,
         DefaultCupertinoLocalizations.delegate,
