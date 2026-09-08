@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../services/storage_service.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
@@ -17,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLogin() async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 700));
     final loggedIn = await StorageService.isLoggedIn();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(MaterialPageRoute(
@@ -27,18 +28,30 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF090D1A),
+    return Scaffold(
+      backgroundColor: AppColors.bg,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.bolt_rounded, color: Color(0xFF3B82F6), size: 64),
-            SizedBox(height: 16),
-            Text('نجاز كارد',
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 24),
-            CircularProgressIndicator(color: Color(0xFF3B82F6)),
+            Container(
+              width: 88,
+              height: 88,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: AppColors.balanceGradient,
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(color: AppColors.accentPurple.withOpacity(0.4), blurRadius: 24, offset: const Offset(0, 10)),
+                ],
+              ),
+              child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 46),
+            ),
+            const SizedBox(height: 20),
+            const Text('نجاز كارد',
+                style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 28),
+            const CircularProgressIndicator(color: AppColors.primary),
           ],
         ),
       ),

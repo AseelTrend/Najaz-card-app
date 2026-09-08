@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../theme/app_colors.dart';
 import '../widgets/category_browser.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
@@ -15,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _tabIndex = 0;
   String _userName = '';
   String _balance = '0';
+  bool _hideBalance = false;
 
   @override
   void initState() {
@@ -42,51 +44,94 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D1A),
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: _tabIndex == 0
             ? Column(
                 children: [
-                  _buildHeader(),
+                  _buildBalanceHero(),
+                  const SizedBox(height: 8),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('الأقسام',
+                          style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
                   const Expanded(child: CategoryBrowser(categoryId: null)),
                 ],
               )
             : const OrdersScreen(),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF0E1525),
-        selectedItemColor: const Color(0xFF3B82F6),
-        unselectedItemColor: const Color(0xFF7C93B5),
-        currentIndex: _tabIndex,
-        onTap: (i) => setState(() => _tabIndex = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'الرئيسية'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'طلباتي'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.text2,
+          currentIndex: _tabIndex,
+          onTap: (i) => setState(() => _tabIndex = i),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'الرئيسية'),
+            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'طلباتي'),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildBalanceHero() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Row(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: AppColors.balanceGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: AppColors.accentPurple.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('مرحباً، $_userName',
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text('رصيدك: \$$_balance',
-                    style: const TextStyle(color: Color(0xFF34D399), fontSize: 14)),
-              ],
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text('مرحباً، $_userName',
+                    style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              ),
+              IconButton(
+                onPressed: _logout,
+                icon: const Icon(Icons.logout_rounded, color: Colors.white70, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: _logout,
-            icon: const Icon(Icons.logout, color: Color(0xFF7C93B5)),
+          const SizedBox(height: 14),
+          const Text('رصيدك الحالي', style: TextStyle(color: Colors.white70, fontSize: 12)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text(
+                _hideBalance ? '••••••' : '\$$_balance',
+                style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => setState(() => _hideBalance = !_hideBalance),
+                child: Icon(
+                  _hideBalance ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                  color: Colors.white70,
+                  size: 20,
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -36,16 +37,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Color _statusColor(String? status) {
     switch (status) {
       case 'completed':
-        return const Color(0xFF34D399);
+        return AppColors.green;
       case 'pending':
       case 'processing':
-        return const Color(0xFFFBBF24);
+        return AppColors.gold;
       case 'rejected':
       case 'cancelled':
       case 'failed':
-        return const Color(0xFFF87171);
+        return AppColors.red;
       default:
-        return const Color(0xFF7C93B5);
+        return AppColors.text2;
     }
   }
 
@@ -72,29 +73,29 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Row(
-            children: const [
-              Text('طلباتي', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            children: [
+              Text('طلباتي', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: _load,
-            color: const Color(0xFF3B82F6),
-            backgroundColor: const Color(0xFF0E1525),
+            color: AppColors.primary,
+            backgroundColor: AppColors.card,
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF3B82F6)))
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : _error != null
-                    ? Center(child: Text(_error!, style: const TextStyle(color: Color(0xFFF87171))))
+                    ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.red)))
                     : _orders.isEmpty
                         ? ListView(
                             children: const [
                               SizedBox(height: 100),
                               Center(
-                                child: Text('لا توجد طلبات بعد', style: TextStyle(color: Color(0xFF7C93B5))),
+                                child: Text('لا توجد طلبات بعد', style: TextStyle(color: AppColors.text2)),
                               ),
                             ],
                           )
@@ -107,9 +108,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
                               return Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF0E1525),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                                  color: AppColors.card,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.border),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +120,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                         Expanded(
                                           child: Text(o['service_name'] ?? '',
                                               style: const TextStyle(
-                                                  color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+                                                  color: AppColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
                                         ),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -136,17 +137,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                     Row(
                                       children: [
                                         Text('الكمية: ${o['quantity']}',
-                                            style: const TextStyle(color: Color(0xFF7C93B5), fontSize: 12)),
+                                            style: const TextStyle(color: AppColors.text2, fontSize: 12)),
                                         const Spacer(),
                                         Text('\$${o['total_price']}',
                                             style: const TextStyle(
-                                                color: Color(0xFF3B82F6), fontWeight: FontWeight.bold, fontSize: 13)),
+                                                color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
                                       ],
                                     ),
                                     if (o['ref_id'] != null) ...[
                                       const SizedBox(height: 4),
                                       Text('رقم الطلب: ${o['ref_id']}',
-                                          style: const TextStyle(color: Color(0xFF7C93B5), fontSize: 11)),
+                                          style: const TextStyle(color: AppColors.text2, fontSize: 11)),
                                     ],
                                   ],
                                 ),

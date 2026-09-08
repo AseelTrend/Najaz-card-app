@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'theme/app_colors.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
@@ -24,10 +25,11 @@ class NjazApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF090D1A),
+        scaffoldBackgroundColor: AppColors.bg,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF3B82F6),
-          surface: Color(0xFF0E1525),
+          primary: AppColors.primary,
+          secondary: AppColors.accentPurple,
+          surface: AppColors.card,
         ),
       ),
       home: const SplashScreen(),

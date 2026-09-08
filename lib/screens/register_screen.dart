@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -51,12 +52,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D1A),
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D1A),
+        backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('إنشاء حساب', style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('إنشاء حساب', style: TextStyle(color: AppColors.text)),
+        iconTheme: const IconThemeData(color: AppColors.text),
       ),
       body: SafeArea(
         child: Padding(
@@ -66,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 8),
-                _field(_username, 'اسم المستخدم (إنجليزي وأرقام فقط)', Icons.person_outline),
+                _field(_username, 'اسم المستخدم (إنجليزي وأرقام فقط)', Icons.person_outline_rounded),
                 const SizedBox(height: 14),
                 _field(_email, 'البريد الإلكتروني', Icons.email_outlined, keyboardType: TextInputType.emailAddress),
                 const SizedBox(height: 14),
@@ -74,31 +75,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 14),
                 _field(_phone, 'رقم الهاتف', Icons.phone_outlined, keyboardType: TextInputType.phone),
                 const SizedBox(height: 14),
-                _field(_password, 'كلمة المرور', Icons.lock_outline, obscure: true),
+                _field(_password, 'كلمة المرور', Icons.lock_outline_rounded, obscure: true),
                 const SizedBox(height: 14),
-                _field(_password2, 'تأكيد كلمة المرور', Icons.lock_outline, obscure: true),
+                _field(_password2, 'تأكيد كلمة المرور', Icons.lock_outline_rounded, obscure: true),
                 const SizedBox(height: 14),
                 _field(_referral, 'كود الإحالة (اختياري)', Icons.card_giftcard_outlined),
                 if (_error != null) ...[
                   const SizedBox(height: 14),
-                  Text(_error!, style: const TextStyle(color: Color(0xFFF87171)), textAlign: TextAlign.center),
+                  Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center),
                 ],
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _loading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: _loading
-                      ? const SizedBox(
-                          height: 20, width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('إنشاء الحساب', style: TextStyle(fontSize: 16, color: Colors.white)),
-                ),
+                _gradientButton(label: 'إنشاء الحساب', loading: _loading, onPressed: _submit),
                 const SizedBox(height: 24),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _gradientButton({required String label, required bool loading, required VoidCallback onPressed}) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColors.balanceGradient,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(color: AppColors.accentPurple.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: loading ? null : onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: loading
+                  ? const SizedBox(
+                      height: 20, width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(label, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
             ),
           ),
         ),
@@ -112,16 +130,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: c,
       obscureText: obscure,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: AppColors.text),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF7C93B5)),
-        prefixIcon: Icon(icon, color: const Color(0xFF7C93B5)),
+        labelStyle: const TextStyle(color: AppColors.text2),
+        prefixIcon: Icon(icon, color: AppColors.text2),
         filled: true,
-        fillColor: const Color(0xFF151F35),
+        fillColor: AppColors.card2,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
       ),
     );

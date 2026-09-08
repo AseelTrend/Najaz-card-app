@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D1A),
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -64,47 +65,85 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
-                  const Icon(Icons.bolt_rounded, color: Color(0xFF3B82F6), size: 56),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 32),
+                  Container(
+                    width: 84,
+                    height: 84,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.balanceGradient,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.accentPurple.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 10)),
+                      ],
+                    ),
+                    child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 42),
+                  ),
+                  const SizedBox(height: 20),
                   const Text('تسجيل الدخول',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                      style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  const Text('مرحباً بعودتك 👋',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.text2, fontSize: 13)),
                   const SizedBox(height: 32),
-                  _field(_loginCtrl, 'اسم المستخدم أو البريد الإلكتروني', Icons.person_outline),
+                  _field(_loginCtrl, 'اسم المستخدم أو البريد الإلكتروني', Icons.person_outline_rounded),
                   const SizedBox(height: 14),
-                  _field(_passCtrl, 'كلمة المرور', Icons.lock_outline, obscure: true),
+                  _field(_passCtrl, 'كلمة المرور', Icons.lock_outline_rounded, obscure: true),
                   if (_need2fa) ...[
                     const SizedBox(height: 14),
-                    _field(_totpCtrl, 'رمز المصادقة الثنائية', Icons.security, keyboardType: TextInputType.number),
+                    _field(_totpCtrl, 'رمز المصادقة الثنائية', Icons.security_rounded,
+                        keyboardType: TextInputType.number),
                   ],
                   if (_error != null) ...[
                     const SizedBox(height: 14),
-                    Text(_error!, style: const TextStyle(color: Color(0xFFF87171)), textAlign: TextAlign.center),
+                    Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center),
                   ],
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _loading ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20, width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('دخول', style: TextStyle(fontSize: 16, color: Colors.white)),
+                  _gradientButton(
+                    label: 'دخول',
+                    loading: _loading,
+                    onPressed: _submit,
                   ),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                    onPressed: () => Navigator.of(context)
+                        .push(MaterialPageRoute(builder: (_) => const RegisterScreen())),
                     child: const Text('ليس لديك حساب؟ إنشاء حساب جديد',
-                        style: TextStyle(color: Color(0xFF7C93B5))),
+                        style: TextStyle(color: AppColors.text2)),
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _gradientButton({required String label, required bool loading, required VoidCallback onPressed}) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppColors.balanceGradient,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(color: AppColors.accentPurple.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: loading ? null : onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: loading
+                  ? const SizedBox(
+                      height: 20, width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(label, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
             ),
           ),
         ),
@@ -118,16 +157,20 @@ class _LoginScreenState extends State<LoginScreen> {
       controller: c,
       obscureText: obscure,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: AppColors.text),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF7C93B5)),
-        prefixIcon: Icon(icon, color: const Color(0xFF7C93B5)),
+        labelStyle: const TextStyle(color: AppColors.text2),
+        prefixIcon: Icon(icon, color: AppColors.text2),
         filled: true,
-        fillColor: const Color(0xFF151F35),
+        fillColor: AppColors.card2,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
       ),
     );

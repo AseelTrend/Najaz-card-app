@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import '../screens/service_detail_screen.dart';
 import '../screens/category_screen.dart';
 
@@ -40,7 +41,6 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
           _showServices = false;
         });
       } else {
-        // ما فيه أقسام فرعية → إذن هذا قسم نهائي، نعرض خدماته
         final services = await ApiService.getServices(categoryId: widget.categoryId);
         setState(() {
           _services = services;
@@ -57,26 +57,20 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF3B82F6)));
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_error != null) {
-      return Center(child: Text(_error!, style: const TextStyle(color: Color(0xFFF87171))));
+      return Center(child: Text(_error!, style: const TextStyle(color: AppColors.red)));
     }
 
     if (_showServices) {
       if (_services.isEmpty) {
-        return RefreshIndicator(
-          onRefresh: _load,
-          color: const Color(0xFF3B82F6),
-          child: ListView(children: const [
-            SizedBox(height: 100),
-            Center(child: Text('لا توجد خدمات هنا حالياً', style: TextStyle(color: Color(0xFF7C93B5)))),
-          ]),
-        );
+        return _emptyState('لا توجد خدمات هنا حالياً');
       }
       return RefreshIndicator(
         onRefresh: _load,
-        color: const Color(0xFF3B82F6),
+        color: AppColors.primary,
+        backgroundColor: AppColors.card,
         child: GridView.builder(
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -92,72 +86,77 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
     }
 
     if (_categories.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: _load,
-        color: const Color(0xFF3B82F6),
-        child: ListView(children: const [
-          SizedBox(height: 100),
-          Center(child: Text('لا توجد أقسام هنا حالياً', style: TextStyle(color: Color(0xFF7C93B5)))),
-        ]),
-      );
+      return _emptyState('لا توجد أقسام هنا حالياً');
     }
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: const Color(0xFF3B82F6),
+      color: AppColors.primary,
+      backgroundColor: AppColors.card,
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          mainAxisSpacing: 12,
+          mainAxisSpacing: 14,
           crossAxisSpacing: 12,
-          childAspectRatio: 0.9,
+          childAspectRatio: 0.85,
         ),
         itemCount: _categories.length,
-        itemBuilder: (context, i) => _categoryCard(_categories[i]),
+        itemBuilder: (context, i) => _categoryCard(_categories[i], i),
       ),
     );
   }
 
-  Widget _categoryCard(dynamic cat) {
+  Widget _emptyState(String msg) {
+    return RefreshIndicator(
+      onRefresh: _load,
+      color: AppColors.primary,
+      backgroundColor: AppColors.card,
+      child: ListView(children: [
+        const SizedBox(height: 100),
+        Center(child: Text(msg, style: const TextStyle(color: AppColors.text2))),
+      ]),
+    );
+  }
+
+  Widget _categoryCard(dynamic cat, int index) {
     final hasImage = cat['image'] != null && cat['image'].toString().isNotEmpty;
+    final badgeColor = AppColors.iconColorFor(index);
     return GestureDetector(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => CategoryScreen(categoryId: cat['id'], categoryName: cat['name'] ?? ''),
       )),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0E1525),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.07)),
-        ),
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            hasImage
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              color: badgeColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: badgeColor.withOpacity(0.3)),
+            ),
+            child: hasImage
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(17),
                     child: Image.network(
                       'https://njaz.net/${cat['image']}',
-                      height: 40,
-                      width: 40,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.folder_rounded, color: Color(0xFF3B82F6), size: 36),
+                      errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: badgeColor, size: 28),
                     ),
                   )
-                : const Icon(Icons.folder_rounded, color: Color(0xFF3B82F6), size: 36),
-            const SizedBox(height: 8),
-            Text(
-              cat['name'] ?? '',
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
+                : Icon(Icons.folder_rounded, color: badgeColor, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            cat['name'] ?? '',
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }
@@ -169,9 +168,9 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0E1525),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.07)),
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
         ),
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -179,16 +178,19 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 child: (service['image'] != null && service['image'].toString().isNotEmpty)
                     ? Image.network(
                         'https://njaz.net/${service['image']}',
                         fit: BoxFit.cover,
                         width: double.infinity,
                         errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.image_not_supported, color: Color(0xFF7C93B5)),
+                            const Icon(Icons.image_not_supported, color: AppColors.text2),
                       )
-                    : const Center(child: Icon(Icons.widgets_outlined, color: Color(0xFF7C93B5), size: 32)),
+                    : Container(
+                        color: AppColors.card2,
+                        child: const Center(child: Icon(Icons.widgets_rounded, color: AppColors.text2, size: 30)),
+                      ),
               ),
             ),
             const SizedBox(height: 8),
@@ -196,11 +198,18 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
               service['name'] ?? '',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+              style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 4),
-            Text('\$${service['price']}',
-                style: const TextStyle(color: Color(0xFF3B82F6), fontSize: 13, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('\$${service['price']}',
+                  style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
       ),
