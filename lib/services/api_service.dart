@@ -93,8 +93,9 @@ class ApiService {
 
   // ══════════════════ Categories & Services ══════════════════
 
-  static Future<List<dynamic>> getCategories() async {
-    final res = await http.get(_u('categories.php'));
+  static Future<List<dynamic>> getCategories({int? parentId}) async {
+    final query = parentId != null ? {'parent_id': '$parentId'} : null;
+    final res = await http.get(_u('categories.php', query));
     final data = _parse(res);
     return data['categories'] as List<dynamic>;
   }
