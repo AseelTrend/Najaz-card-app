@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../widgets/category_browser.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
+import 'wallet_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,6 +40,20 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
+  }
+
+  Future<void> _openWallet() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen()));
+    try {
+      final wallet = await ApiService.getWallet();
+      final current = await StorageService.getUser();
+      await StorageService.saveUser({
+        'name': current['name'],
+        'uid': current['uid'],
+        'balance': (wallet['balance'] ?? current['balance']).toString(),
+      });
+    } catch (_) {}
+    _loadUser();
   }
 
   @override
@@ -129,6 +144,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   _hideBalance ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                   color: Colors.white70,
                   size: 20,
+                ),
+              ),
+              const Spacer(),
+              Material(
+                color: Colors.white.withOpacity(0.16),
+                borderRadius: BorderRadius.circular(10),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: _openWallet,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 15),
+                        SizedBox(width: 5),
+                        Text('شحن الرصيد', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

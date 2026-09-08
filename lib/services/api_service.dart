@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config.dart';
 import 'storage_service.dart';
@@ -146,5 +147,135 @@ class ApiService {
     final res = await http.get(_u('orders.php', {'page': '$page'}), headers: headers);
     final data = _parse(res);
     return data['orders'] as List<dynamic>;
+  }
+
+  // ══════════════════ المحفظة ══════════════════
+
+  static Future<Map<String, dynamic>> getWallet() async {
+    final headers = await _authHeaders();
+    final res = await http.get(_u('wallet.php'), headers: headers);
+    return _parse(res);
+  }
+
+  // ══════════════════ شحن الرصيد — خيارات الصفحة ══════════════════
+
+  static Future<Map<String, dynamic>> getTopupOptions() async {
+    final headers = await _authHeaders();
+    final res = await http.get(_u('topup_options.php'), headers: headers);
+    return _parse(res);
+  }
+
+  // ── تحويل يدوي (بإيصال) ──
+  static Future<Map<String, dynamic>> submitManualTopup({
+    required int methodId,
+    required String currencyCode,
+    required double amountSent,
+    String notes = '',
+    File? receiptFile,
+  }) async {
+    final headers = await _authHeaders();
+    final request = http.MultipartRequest('POST', _u('topup_manual.php'))
+      ..headers.addAll(headers)
+      ..fields['method_id'] = '$methodId'
+      ..fields['currency_code'] = currencyCode
+      ..fields['amount_sent'] = '$amountSent'
+      ..fields['notes'] = notes;
+    if (receiptFile != null) {
+      request.files.add(await http.MultipartFile.fromPath('receipt', receiptFile.path));
+    }
+    final streamed = await request.send();
+    final res = await http.Response.fromStream(streamed);
+    return _parse(res);
+  }
+
+  // ── شحن بكود بطاقة ──
+  static Future<Map<String, dynamic>> redeemCard(String code) async {
+    final headers = await _authHeaders();
+    final res = await http.post(_u('card_redeem.php'), headers: headers, body: {'code': code});
+    return _parse(res);
+  }
+
+  // ── USDT BEP20 (مباشر) ──
+  static Future<Map<String, dynamic>> createUsdtRequest(double amount) async {
+    final headers = await _authHeaders();
+    headers['Content-Type'] = 'application/json';
+    final res = await http.post(_u('usdt_request.php'), headers: headers, body: jsonEncode({'amount': amount}));
+    final data = _parse(res);
+    return data['request'] as Map<String, dynamic>;
+  }
+
+  static Future<String> verifyUsdtTx({required int requestId, required String txId}) async {
+    final headers = await _authHeaders();
+    headers['Content-Type'] = 'application/json';
+    final res = await http.post(
+      _u('usdt_verify.php'),
+      headers: headers,
+      body: jsonEncode({'request_id': requestId, 'tx_id': txId}),
+    );
+    final data = _parse(res);
+    return (data['amount'] ?? '0').toString();
+  }
+
+  // ── Binance Pay (مباشر) ──
+  static Future<Map<String, dynamic>> binanceCreate(String amount) async {
+    final headers = await _authHeaders();
+    final res = await http.post(_u('binance_deposit.php'), headers: headers, body: {
+      'action': 'create',
+      'amount': amount,
+    });
+    return _parse(res);
+  }
+
+  static Future<Map<String, dynamic>> binanceVerify({required int requestId, required String transactionId}) async {
+    final headers = await _authHeaders();
+    final res = await http.post(_u('binance_deposit.php'), headers: headers, body: {
+      'action': 'verify',
+      'request_id': '$requestId',
+      'transaction_id': transactionId,
+    });
+    return _parse(res);
+  }
+
+  static Future<List<dynamic>> binanceHistory() async {
+    final headers = await _authHeaders();
+    final res = await http.post(_u('binance_deposit.php'), headers: headers, body: {'action': 'list'});
+    final data = _parse(res);
+    return (data['requests'] as List<dynamic>?) ?? [];
+  }
+
+  // ── تحويل عبر شرائح الاتصال (تحقق فوري) ──
+  static Future<Map<String, dynamic>> smsVerifyTopup({
+    required String phone,
+    required double amount,
+    required int providerId,
+  }) async {
+    final headers = await _authHeaders();
+    final res = await http.post(_u('sms_verify.php'), headers: headers, body: {
+      'phone': phone,
+      'amount': '$amount',
+      'provider_id': '$providerId',
+    });
+    return _parse(res);
+  }
+
+  // ── محفظة فلوسك (OTP) ──
+  static Future<Map<String, dynamic>> floosakInitiate({required double amount, required String phone}) async {
+    final headers = await _authHeaders();
+    final res = await http.post(_u('floosak.php'), headers: headers, body: {
+      'action': 'floosak_initiate',
+      'amount': '$amount',
+      'phone': phone,
+    });
+    return _parse(res, successKey: 'status');
+  }
+
+  static Future<Map<String, dynamic>> floosakConfirm({required int purchaseId, required String otp}) async {
+    final headers = await _authHeaders();
+    final res = await http.post(_u('floosak.php'), headers: headers, body: {
+      'action': 'floosak_confirm',
+      'purchase_id': '$purchaseId',
+      'otp': otp,
+    });
+    return _parse(res, successKey: 'status');
   }
 }
