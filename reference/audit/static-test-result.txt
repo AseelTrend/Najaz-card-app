@@ -1,0 +1,9 @@
+multi_length_regex             OK
+source_message_unique_key      OK
+atomic_reservation             OK
+reply_amount_validation        OK
+quote_matching                 OK
+expiry_handling                OK
+admin_reply_keyword_field      OK
+worker_token_protection        OK
+نجح اختبار نظام سوا الثابت: 8/8

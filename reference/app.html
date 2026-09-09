@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0f1e">
+<title>شحن برو</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ═══════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════ */
+:root {
+  --bg: #080c1a;
+  --bg2: #0d1428;
+  --card: #111827;
+  --card2: #1a2340;
+  --border: rgba(255,255,255,0.07);
+  --primary: #1e6fff;
+  --primary2: #0d4fd4;
+  --cyan: #00d4ff;
+  --gold: #f5a623;
+  --green: #00e676;
+  --red: #ff1744;
+  --text: #ffffff;
+  --text2: #8fa3bf;
+  --text3: #4d6080;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --font: 'Cairo', sans-serif;
+  --nav-h: 64px;
+  --header-h: 60px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; background:var(--bg); font-family:var(--font); color:var(--text); direction:rtl; }
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+#app {
+  width: 100%;
+  max-width: 430px;
+  height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 0 80px rgba(0,0,0,0.8);
+}
+
+/* ═══════════════════════════════════════════
+   TOP HEADER
+═══════════════════════════════════════════ */
+.top-header {
+  height: var(--header-h);
+  background: linear-gradient(135deg, #0d1428 0%, #0a1535 100%);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-logo .logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  border-radius: 12px;
+  display: flex; align-items:center; justify-content:center;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(30,111,255,0.4);
+}
+.header-logo .logo-text {
+  font-size: 18px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #fff 0%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right { display: flex; align-items:center; gap: 10px; }
+.header-btn {
+  width: 38px; height: 38px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex; align-items:center; justify-content:center;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 16px;
+  transition: all 0.2s;
+  position: relative;
+}
+.header-btn:active { transform: scale(0.92); }
+.notif-dot {
+  position: absolute;
+  top: 7px; right: 7px;
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 1.5px solid var(--bg);
+}
+
+/* ═══════════════════════════════════════════
+   BALANCE BAR
+═══════════════════════════════════════════ */
+.balance-bar {
+  background: linear-gradient(135deg, var(--primary2) 0%, #0a0d2e 100%);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.balance-info { display:flex; align-items:center; gap: 10px; }
+.balance-icon {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size: 16px;
+}
+.balance-label { font-size: 11px; color: rgba(255,255,255,0.6); }
+.balance-value { font-size: 18px; font-weight: 900; color:#fff; line-height:1; }
+.balance-currency { font-size:11px; color:rgba(255,255,255,0.6); }
+.balance-reload {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 6px 14px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items:center; gap:5px;
+}
+.balance-reload:active { transform: scale(0.95); }
+
+/* ═══════════════════════════════════════════
+   SCROLL CONTENT
+═══════════════════════════════════════════ */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+.content::-webkit-scrollbar { display: none; }
+
+/* ═══════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════ */
+.page { display: none; animation: fadeIn 0.25s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ═══════════════════════════════════════════
+   HOME PAGE
+═══════════════════════════════════════════ */
+
+/* Hero Banner */
+.hero-banner {
+  margin: 12px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  height: 160px;
+  background: linear-gradient(135deg, #0d1f5c 0%, #1a3a8c 50%, #0d1f5c 100%);
+  cursor: pointer;
+}
+.hero-banner::before {
+  content:'';
+  position:absolute; inset:0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='160'%3E%3Cdefs%3E%3CradialGradient id='g' cx='70%25' cy='50%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%2300d4ff' stop-opacity='0.15'/%3E%3Cstop offset='100%25' stop-color='transparent'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' width='400' height='160'/%3E%3C/svg%3E");
+}
+.hero-content {
+  position:absolute; inset:0;
+  padding: 16px 20px;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.hero-tag {
+  background: rgba(0,212,255,0.2);
+  border: 1px solid rgba(0,212,255,0.4);
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  width: fit-content;
+}
+.hero-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.hero-title span { color: var(--cyan); }
+.hero-sub { font-size: 12px; color: rgba(255,255,255,0.7); }
+.hero-dots {
+  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+  display:flex; gap:5px;
+}
+.hero-dot {
+  width:6px; height:6px; border-radius:3px;
+  background: rgba(255,255,255,0.3);
+  transition: all 0.3s;
+}
+.hero-dot.active { width:18px; background: var(--cyan); }
+
+/* App Icons Row */
+.apps-strip {
+  padding: 8px 12px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.apps-strip::-webkit-scrollbar { display: none; }
+.app-icon-item {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.app-icon-img {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex; align-items:center; justify-content:center;
+  font-size: 22px;
+  border: 2px solid rgba(255,255,255,0.08);
+  transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.app-icon-item:active .app-icon-img { transform: scale(0.9); }
+.app-icon-label { font-size: 9px; color: var(--text2); font-weight: 600; white-space: nowrap; }
+
+/* Section Header */
+.sec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+}
+.sec-title { font-size: 15px; font-weight: 800; color: #fff; }
+.sec-more {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  display:flex; align-items:center; gap:3px;
+}
+
+/* Category Grid - 2 columns like screenshots */
+.cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+.cat-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  height: 130px;
+  transition: transform 0.2s;
+  border: 1px solid var(--border);
+}
+.cat-card:active { transform: scale(0.96); }
+.cat-card-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px;
+}
+.cat-card-overlay {
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%);
+}
+.cat-card-content {
+  position:absolute; bottom:0; left:0; right:0;
+  padding: 10px 12px;
+}
+.cat-card-name { font-size: 13px; font-weight: 800; color: #fff; }
+.cat-card-badge {
+  font-size: 9px;
+  background: var(--primary);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 3px;
+}
+.cat-card-logo {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 9px;
+  color: var(--cyan);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+.new-badge {
+  position:absolute;
+  top:10px; right:10px;
+  background: var(--gold);
+  color: #000;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 10px;
+  transform: rotate(3deg);
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+.qa-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.qa-item:active { transform: scale(0.93); background: var(--card2); }
+.qa-icon {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  margin: 0 auto 8px;
+  display: flex; align-items:center; justify-content:center;
+  font-size: 20px;
+}
+.qa-label { font-size: 11px; color: var(--text2); font-weight: 600; }
+
+/* ═══════════════════════════════════════════
+   CATEGORY PAGE (Gaming, Apps, Cards)
+═══════════════════════════════════════════ */
+.page-header-img {
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+.page-header-img-bg {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size: 80px;
+  filter: blur(2px) brightness(0.4);
+  transform: scale(1.1);
+}
+.page-header-img-overlay {
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(8,12,26,0.3) 0%, rgba(8,12,26,0.95) 100%);
+}
+.page-header-img-content {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  justify-content:flex-end;
+  padding: 16px;
+}
+.phic-back {
+  position:absolute; top:12px; right:12px;
+  width:36px; height:36px;
+  background: rgba(0,0,0,0.5);
+  border-radius:50%; border:none;
+  color:#fff; font-size:16px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.phic-title { font-size: 32px; font-weight: 900; color:#fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.phic-sub { font-size:12px; color:rgba(255,255,255,0.6); }
+
+.search-bar {
+  margin: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.search-bar i { color: var(--text3); font-size: 16px; }
+.search-bar input {
+  flex:1; background:none; border:none; outline:none;
+  color: #fff; font-family: var(--font); font-size: 14px;
+  text-align: right;
+}
+.search-bar input::placeholder { color: var(--text3); }
+
+/* Games / Sub-items grid (3 columns like screenshot) */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+.game-item {
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s;
+}
+.game-item:active { transform: scale(0.93); }
+.game-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: var(--card2);
+  display:flex; align-items:center; justify-content:center;
+}
+.game-thumb-icon { font-size: 34px; }
+.game-thumb-overlay {
+  position:absolute; bottom:0; left:0; right:0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+  padding: 6px;
+}
+.game-thumb-brand {
+  font-size: 7px;
+  color: var(--cyan);
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  text-align: right;
+  line-height: 1;
+}
+.game-thumb-brand-sub { font-size: 5.5px; color: rgba(0,212,255,0.7); }
+.unavail-badge {
+  position:absolute; top:0; right:0;
+  background: rgba(255,23,68,0.9);
+  color:#fff; font-size:7px; font-weight:900;
+  padding: 3px 6px;
+  border-radius: 0 10px 0 8px;
+}
+.game-name { font-size: 10px; color: var(--text2); margin-top: 5px; font-weight: 600; }
+
+/* ═══════════════════════════════════════════
+   SUB-CATEGORY PAGE (e.g. PUBG items)
+═══════════════════════════════════════════ */
+.sub-items-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+/* ═══════════════════════════════════════════
+   PRODUCT PAGE (packages list)
+═══════════════════════════════════════════ */
+.product-header {
+  background: linear-gradient(180deg, #0d1f5c 0%, var(--bg) 100%);
+  padding: 16px;
+  text-align: center;
+  position: relative;
+}
+.product-header-icon { font-size: 64px; margin-bottom: 8px; filter: drop-shadow(0 4px 20px rgba(30,111,255,0.5)); }
+.product-header-name { font-size: 22px; font-weight: 900; }
+.product-header-sub { font-size:12px; color:var(--text2); }
+
+/* Action tabs */
+.action-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.action-tab-btn {
+  flex:1; text-align:center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+}
+.action-tab-btn.active { background: var(--primary); border-color:var(--primary); color:#fff; }
+
+/* Package cards - horizontal */
+.packages-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.pkg-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.pkg-card:active { transform: scale(0.97); }
+.pkg-card.selected {
+  border-color: var(--primary);
+  background: rgba(30,111,255,0.1);
+}
+.pkg-card.unavail { opacity: 0.5; }
+.pkg-unavail-ribbon {
+  position:absolute; top:10px; right:-20px;
+  background: rgba(255,23,68,0.9);
+  color:#fff; font-size:8px; font-weight:900;
+  padding: 3px 24px;
+  transform: rotate(35deg);
+  transform-origin: right top;
+}
+.pkg-icon {
+  width:56px; height:56px;
+  border-radius: 12px;
+  overflow:hidden;
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+}
+.pkg-info { flex:1; }
+.pkg-name { font-size: 14px; font-weight: 800; }
+.pkg-cat { font-size:10px; color:var(--primary); margin-bottom:2px; }
+.pkg-prices {
+  display: flex; align-items:center; gap: 8px; margin-top: 6px;
+}
+.pkg-price-main {
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+.pkg-price-usd {
+  background: rgba(255,255,255,0.08);
+  border: 1px dashed rgba(255,255,255,0.2);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+.pkg-check {
+  width:22px; height:22px;
+  border-radius:50%;
+  border: 2px solid var(--border);
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; color:transparent;
+}
+.pkg-card.selected .pkg-check {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   ORDER BOTTOM SHEET
+═══════════════════════════════════════════ */
+.sheet-overlay {
+  position:absolute; inset:0;
+  background: rgba(0,0,0,0.7);
+  z-index: 500;
+  display:none;
+  backdrop-filter: blur(2px);
+}
+.sheet-overlay.show { display:block; animation: fadeOverlay 0.2s ease; }
+@keyframes fadeOverlay { from{opacity:0} to{opacity:1} }
+
+.bottom-sheet {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, #141c30 0%, #0d1428 100%);
+  border-radius: 24px 24px 0 0;
+  padding: 0 0 20px;
+  z-index: 600;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.15,0.64,1);
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.bottom-sheet.open { transform: translateY(0); }
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+.sheet-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items:center; justify-content:space-between;
+}
+.sheet-title { font-size: 16px; font-weight: 800; }
+.sheet-pkg { font-size: 12px; color: var(--primary); }
+.sheet-close {
+  width:32px; height:32px;
+  background: rgba(255,255,255,0.07);
+  border-radius:50%; border:none; color:var(--text2);
+  font-size:14px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+
+.sheet-warning {
+  margin: 12px 14px;
+  background: rgba(245,166,35,0.12);
+  border: 1px solid rgba(245,166,35,0.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.sheet-warning i { color: var(--gold); margin-top: 2px; flex-shrink:0; }
+.sheet-warning p { font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+
+.sheet-fields { padding: 0 14px; }
+.sheet-field {
+  margin-bottom: 12px;
+}
+.sheet-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.sheet-field .field-input {
+  width:100%;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 15px;
+  outline: none;
+  transition: border 0.2s;
+  direction: ltr;
+  text-align: right;
+}
+.sheet-field .field-input:focus { border-color: var(--primary); }
+.sheet-field .field-icon-wrap {
+  position:relative;
+}
+.sheet-field .field-icon {
+  position:absolute; top:50%; right:12px; transform:translateY(-50%);
+  color:var(--text3); font-size:18px;
+}
+.sheet-field .field-input.has-icon { padding-right: 42px; }
+
+.sheet-total {
+  margin: 12px 14px;
+  background: rgba(30,111,255,0.08);
+  border: 1px solid rgba(30,111,255,0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.sheet-total-row {
+  display:flex; justify-content:space-between; align-items:center;
+}
+.sheet-total-label { font-size: 12px; color: var(--text2); }
+.sheet-total-value { font-size: 14px; font-weight: 900; color: var(--cyan); }
+.sheet-total-usd { font-size: 12px; color: var(--text2); font-weight: 600; }
+
+.sheet-buy-btn {
+  margin: 14px 14px 0;
+  width: calc(100% - 28px);
+  background: linear-gradient(135deg, var(--primary) 0%, #0a3fbe 100%);
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow: 0 6px 20px rgba(30,111,255,0.4);
+  transition: all 0.2s;
+}
+.sheet-buy-btn:active { transform: scale(0.97); }
+
+/* ═══════════════════════════════════════════
+   ORDERS PAGE
+═══════════════════════════════════════════ */
+.orders-page { padding: 12px; }
+.order-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex; gap: 12px; align-items: center;
+}
+.order-icon {
+  width:48px; height:48px;
+  border-radius:12px;
+  background: var(--card2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; flex-shrink:0;
+}
+.order-info { flex:1; }
+.order-name { font-size:13px; font-weight:700; }
+.order-id { font-size:10px; color:var(--text3); }
+.order-price { font-size:14px; font-weight:900; color:var(--cyan); margin-top:4px; }
+.order-status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.status-pending  { background:rgba(245,166,35,0.15); color:var(--gold); }
+.status-done     { background:rgba(0,230,118,0.15); color:var(--green); }
+.status-fail     { background:rgba(255,23,68,0.15); color:var(--red); }
+.status-process  { background:rgba(30,111,255,0.15); color:var(--primary); }
+
+/* ═══════════════════════════════════════════
+   WALLET PAGE
+═══════════════════════════════════════════ */
+.wallet-page { padding: 12px; }
+.wallet-card {
+  background: linear-gradient(135deg, var(--primary2) 0%, #0a1540 100%);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.wallet-card::before {
+  content:'';
+  position:absolute; top:-40%; right:-20%;
+  width:200px; height:200px;
+  border-radius:50%;
+  background: radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 70%);
+}
+.wallet-balance-label { font-size:12px; color:rgba(255,255,255,0.6); margin-bottom:4px; }
+.wallet-balance-amount { font-size:38px; font-weight:900; }
+.wallet-balance-cur { font-size:14px; color:rgba(255,255,255,0.7); }
+.wallet-actions { display:flex; gap:10px; margin-top:16px; }
+.wallet-action-btn {
+  flex:1; background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:12px; padding:10px;
+  color:#fff; font-family:var(--font);
+  font-size:12px; font-weight:700;
+  cursor:pointer; display:flex;
+  align-items:center; justify-content:center; gap:6px;
+}
+
+.tx-list { }
+.tx-item {
+  display:flex; align-items:center; gap:12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.tx-icon {
+  width:40px; height:40px;
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.tx-icon.credit { background:rgba(0,230,118,0.12); color:var(--green); }
+.tx-icon.debit { background:rgba(255,23,68,0.12); color:var(--red); }
+.tx-info { flex:1; }
+.tx-name { font-size:13px; font-weight:700; }
+.tx-date { font-size:10px; color:var(--text3); }
+.tx-amount { font-size:15px; font-weight:900; }
+.tx-amount.credit { color:var(--green); }
+.tx-amount.debit { color:var(--red); }
+
+/* ═══════════════════════════════════════════
+   PROFILE PAGE
+═══════════════════════════════════════════ */
+.profile-page { padding: 12px; }
+.profile-header-card {
+  background: linear-gradient(135deg, #0d1f5c, #1a3a8c);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.profile-avatar {
+  width:72px; height:72px;
+  border-radius:50%;
+  background: linear-gradient(135deg, var(--primary), var(--cyan));
+  margin: 0 auto 10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px;
+  box-shadow: 0 4px 20px rgba(30,111,255,0.4);
+}
+.profile-name { font-size:18px; font-weight:900; }
+.profile-id { font-size:11px; color:rgba(255,255,255,0.6); margin-top:4px; }
+.profile-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  background: rgba(0,230,118,0.15);
+  border:1px solid rgba(0,230,118,0.3);
+  color:var(--green);
+  font-size:11px; font-weight:700;
+  padding:4px 12px; border-radius:20px;
+  margin-top:8px;
+}
+.profile-menu-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex; align-items:center; gap:12px;
+  margin-bottom:8px;
+  cursor:pointer; transition: all 0.2s;
+}
+.profile-menu-item:active { background: var(--card2); }
+.pmi-icon {
+  width:38px; height:38px;
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px;
+}
+.pmi-label { flex:1; font-size:13px; font-weight:700; }
+.pmi-arrow { color:var(--text3); font-size:12px; }
+
+/* ═══════════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════════ */
+.bottom-nav {
+  height: var(--nav-h);
+  background: linear-gradient(180deg, rgba(13,20,40,0.97) 0%, #080c1a 100%);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 200;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: all 0.2s;
+  position: relative;
+}
+.nav-item:active { transform: scale(0.9); }
+.nav-icon { font-size: 20px; color: var(--text3); transition: all 0.2s; }
+.nav-label { font-size: 10px; color: var(--text3); font-weight: 600; transition: all 0.2s; }
+.nav-item.active .nav-icon { color: var(--primary); }
+.nav-item.active .nav-label { color: var(--primary); }
+.nav-item.active::before {
+  content:'';
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:30px; height:2px; border-radius:0 0 3px 3px;
+  background: var(--primary);
+}
+
+/* Center add button */
+.nav-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+.nav-center-btn {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, var(--primary), #0a3fbe);
+  border-radius: 18px;
+  display: flex; align-items:center; justify-content:center;
+  font-size: 22px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(30,111,255,0.5);
+  margin-top: -14px;
+  transition: transform 0.2s;
+  border: 3px solid var(--bg);
+}
+.nav-center-btn:active { transform: scale(0.9); }
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast {
+  position:absolute; top:70px; left:50%; transform:translateX(-50%) translateY(-20px);
+  background: rgba(30,111,255,0.95);
+  color:#fff; font-size:13px; font-weight:700;
+  padding: 10px 20px;
+  border-radius: 20px;
+  white-space: nowrap;
+  opacity:0; pointer-events:none;
+  transition: all 0.3s;
+  z-index: 9999;
+  backdrop-filter: blur(10px);
+}
+.toast.show {
+  opacity:1; transform:translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   SHIMMER LOADER
+═══════════════════════════════════════════ */
+@keyframes shimmer {
+  0%{background-position:-400px 0}
+  100%{background-position:400px 0}
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- TOP HEADER -->
+  <div class="top-header">
+    <div class="header-logo">
+      <div class="logo-icon">🚀</div>
+      <div class="logo-text">شحن برو</div>
+    </div>
+    <div class="header-right">
+      <div class="header-btn" onclick="showToast('لا توجد إشعارات جديدة')">
+        <i class="fas fa-bell"></i>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="header-btn" onclick="showToast('الإعدادات')">
+        <i class="fas fa-cog"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- BALANCE BAR -->
+  <div class="balance-bar">
+    <div class="balance-info">
+      <div class="balance-icon">💰</div>
+      <div>
+        <div class="balance-label">الرصيد الإجمالي</div>
+        <div class="balance-value" id="balanceVal">0</div>
+        <div class="balance-currency">ر.س</div>
+      </div>
+    </div>
+    <button class="balance-reload" onclick="showToast('تم تحديث الرصيد')">
+      <i class="fas fa-sync-alt"></i> تحديث
+    </button>
+  </div>
+
+  <!-- SCROLLABLE CONTENT -->
+  <div class="content" id="mainContent">
+
+    <!-- ══════════ HOME PAGE ══════════ -->
+    <div class="page active" id="page-home">
+
+      <!-- Hero Banner -->
+      <div class="hero-banner" onclick="goPage('games')">
+        <div class="hero-content">
+          <div>
+            <div class="hero-tag">✨ أفضل الأسعار</div>
+            <div class="hero-title">أشحن<br><span>العابك</span></div>
+          </div>
+          <div class="hero-sub">ألعاب • برامج • بطاقات رقمية</div>
+        </div>
+        <div class="hero-dots">
+          <div class="hero-dot active"></div>
+          <div class="hero-dot"></div>
+          <div class="hero-dot"></div>
+        </div>
+      </div>
+
+      <!-- Popular Apps Strip -->
+      <div class="sec-header">
+        <div class="sec-title">تطبيقات شائعة</div>
+      </div>
+      <div class="apps-strip">
+        <div class="app-icon-item" onclick="openSheet('بوبجي موبايل','بوبجي ( 10 شدة )','0.22 $','120 ر.ي')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#1a237e,#283593)">🎮</div>
+          <div class="app-icon-label">بوبجي</div>
+        </div>
+        <div class="app-icon-item" onclick="openSheet('فري فاير','فري فاير 100 ماسة','1.5 $','540 ر.ي')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#b71c1c,#c62828)">🔥</div>
+          <div class="app-icon-label">فري فاير</div>
+        </div>
+        <div class="app-icon-item" onclick="goPage('apps')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#1a237e,#0d47a1)">📱</div>
+          <div class="app-icon-label">تيك توك</div>
+        </div>
+        <div class="app-icon-item" onclick="goPage('apps')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#880e4f,#ad1457)">💜</div>
+          <div class="app-icon-label">بيلا</div>
+        </div>
+        <div class="app-icon-item" onclick="goPage('apps')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#004d40,#00695c)">🎙️</div>
+          <div class="app-icon-label">يوهو</div>
+        </div>
+        <div class="app-icon-item" onclick="goPage('apps')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#37474f,#546e7a)">🎯</div>
+          <div class="app-icon-label">سوقو</div>
+        </div>
+        <div class="app-icon-item" onclick="goPage('apps')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#0d47a1,#1565c0)">💬</div>
+          <div class="app-icon-label">IMO</div>
+        </div>
+        <div class="app-icon-item" onclick="goPage('apps')">
+          <div class="app-icon-img" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">🎪</div>
+          <div class="app-icon-label">آهلان</div>
+        </div>
+      </div>
+
+      <!-- Main Categories -->
+      <div class="sec-header">
+        <div class="sec-title">الخدمات</div>
+        <div class="sec-more" onclick="showToast('جميع الخدمات')">الكل <i class="fas fa-chevron-left"></i></div>
+      </div>
+
+      <div class="cat-grid">
+        <div class="cat-card" onclick="goPage('games')" style="background:linear-gradient(135deg,#1a237e,#0d47a1)">
+          <div class="cat-card-bg">🎮</div>
+          <div class="cat-card-overlay"></div>
+          <div class="cat-card-content">
+            <div class="cat-card-name">شحن الألعاب</div>
+            <div class="cat-card-badge">20+ لعبة</div>
+          </div>
+          <div class="cat-card-logo">شحن برو</div>
+        </div>
+
+        <div class="cat-card" onclick="goPage('apps')" style="background:linear-gradient(135deg,#004d40,#006064)">
+          <div class="cat-card-bg">📲</div>
+          <div class="cat-card-overlay"></div>
+          <div class="cat-card-content">
+            <div class="cat-card-name">شحن البرامج</div>
+            <div class="cat-card-badge">15+ تطبيق</div>
+          </div>
+          <div class="cat-card-logo">شحن برو</div>
+        </div>
+
+        <div class="cat-card" onclick="goPage('cards')" style="background:linear-gradient(135deg,#4a148c,#6a1b9a)">
+          <div class="cat-card-bg">💳</div>
+          <div class="cat-card-overlay"></div>
+          <div class="cat-card-content">
+            <div class="cat-card-name">البطاقات الإلكترونية</div>
+            <div class="cat-card-badge">10+ بطاقة</div>
+          </div>
+          <div class="cat-card-logo">شحن برو</div>
+        </div>
+
+        <div class="cat-card" onclick="goPage('apps')" style="background:linear-gradient(135deg,#b71c1c,#c62828)">
+          <div class="cat-card-bg">📡</div>
+          <div class="cat-card-overlay"></div>
+          <div class="cat-card-content">
+            <div class="cat-card-name">السوشيال ميديا</div>
+            <div class="cat-card-badge">8+ خدمة</div>
+          </div>
+          <div class="cat-card-logo">شحن برو</div>
+          <div class="new-badge">جديد</div>
+        </div>
+
+        <div class="cat-card" onclick="showToast('قريباً')" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">
+          <div class="cat-card-bg">📋</div>
+          <div class="cat-card-overlay"></div>
+          <div class="cat-card-content">
+            <div class="cat-card-name">الاشتراكات</div>
+            <div class="cat-card-badge">قريباً</div>
+          </div>
+          <div class="cat-card-logo">شحن برو</div>
+          <div class="new-badge" style="background:#aaa">قريباً</div>
+        </div>
+
+        <div class="cat-card" onclick="showToast('قريباً')" style="background:linear-gradient(135deg,#37474f,#455a64)">
+          <div class="cat-card-bg">🔓</div>
+          <div class="cat-card-overlay"></div>
+          <div class="cat-card-content">
+            <div class="cat-card-name">فك الحظر</div>
+            <div class="cat-card-badge">قريباً</div>
+          </div>
+          <div class="cat-card-logo">شحن برو</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="sec-header">
+        <div class="sec-title">إجراءات سريعة</div>
+      </div>
+      <div class="quick-actions">
+        <div class="qa-item" onclick="navTo('orders')">
+          <div class="qa-icon" style="background:rgba(30,111,255,0.15)"><i class="fas fa-list-alt" style="color:var(--primary)"></i></div>
+          <div class="qa-label">طلباتي</div>
+        </div>
+        <div class="qa-item" onclick="navTo('wallet')">
+          <div class="qa-icon" style="background:rgba(0,230,118,0.15)"><i class="fas fa-wallet" style="color:var(--green)"></i></div>
+          <div class="qa-label">محفظتي</div>
+        </div>
+        <div class="qa-item" onclick="navTo('profile')">
+          <div class="qa-icon" style="background:rgba(0,212,255,0.15)"><i class="fas fa-user" style="color:var(--cyan)"></i></div>
+          <div class="qa-label">حسابي</div>
+        </div>
+        <div class="qa-item" onclick="navTo('orders')">
+          <div class="qa-icon" style="background:rgba(245,166,35,0.15)"><i class="fas fa-clock" style="color:var(--gold)"></i></div>
+          <div class="qa-label">قيد التنفيذ</div>
+        </div>
+        <div class="qa-item" onclick="showToast('الدعم الفني')">
+          <div class="qa-icon" style="background:rgba(255,23,68,0.15)"><i class="fas fa-headset" style="color:var(--red)"></i></div>
+          <div class="qa-label">الدعم</div>
+        </div>
+        <div class="qa-item" onclick="showToast('الإعدادات')">
+          <div class="qa-icon" style="background:rgba(100,100,120,0.2)"><i class="fas fa-cog" style="color:var(--text2)"></i></div>
+          <div class="qa-label">الإعدادات</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ══════════ GAMES PAGE ══════════ -->
+    <div class="page" id="page-games">
+      <div class="page-header-img" style="background:linear-gradient(135deg,#0d1f5c,#1a3a8c)">
+        <div class="page-header-img-bg">🎮</div>
+        <div class="page-header-img-overlay"></div>
+        <div class="page-header-img-content">
+          <button class="phic-back" onclick="goHome()"><i class="fas fa-arrow-right"></i></button>
+          <div class="phic-title">شحن الألعاب</div>
+          <div class="phic-sub">اشحن ألعابك المفضلة بأسرع وقت</div>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="ابحث في شحن الالعاب...">
+      </div>
+
+      <!-- Disclaimer -->
+      <div style="margin:0 12px 12px;background:rgba(255,165,0,0.07);border:1px solid rgba(255,165,0,0.2);border-radius:12px;padding:10px 14px;">
+        <p style="font-size:11px;color:rgba(255,255,255,0.7);line-height:1.7;text-align:center">نُبرئ ذمتنا أمام الله من أي استخدام غير مشروع لهذه الألعاب • وَقِقُّوهُمْ إِنَّهُم مَّسْئُولُونَ</p>
+      </div>
+
+      <div class="items-grid">
+        <div class="game-item" onclick="goPage('pubg')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#1a237e,#283593)">
+            <div class="game-thumb-icon">🎯</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو<br><span class="game-thumb-brand-sub">SHAHN PRO</span></div>
+            </div>
+          </div>
+          <div class="game-name">بوبجي</div>
+        </div>
+        <div class="game-item" onclick="openSheet('فري فاير','فري فاير 100 ماسة','1.5 $','540 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#b71c1c,#c62828)">
+            <div class="game-thumb-icon">🔥</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">فري فاير</div>
+        </div>
+        <div class="game-item" onclick="openSheet('موبايل ليجند','موبايل 100 ماسة','2 $','720 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">
+            <div class="game-thumb-icon">⚔️</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">موبايل ليجند</div>
+        </div>
+        <div class="game-item" onclick="openSheet('كلاش أوف كلانس','ذهب 1200','1.2 $','432 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#e65100,#bf360c)">
+            <div class="game-thumb-icon">🏰</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">كلاش أوف كلانس</div>
+        </div>
+        <div class="game-item" onclick="openSheet('فيفا موبايل','1050 FUT Coins','2.5 $','900 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#0d47a1,#1565c0)">
+            <div class="game-thumb-icon">⚽</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">فيفا موبايل</div>
+        </div>
+        <div class="game-item" onclick="openSheet('كول أوف ديوتي','CP 80','0.8 $','290 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#212121,#424242)">
+            <div class="game-thumb-icon">🔫</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">كول أوف ديوتي</div>
+        </div>
+        <div class="game-item" onclick="openSheet('بلود سترايك','AC 100','1.0 $','360 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#880e4f,#ad1457)">
+            <div class="game-thumb-icon">🩸</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">بلود سترايك</div>
+        </div>
+        <div class="game-item" onclick="showToast('قريباً')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#37474f,#546e7a)">
+            <div class="unavail-badge">قريباً</div>
+            <div class="game-thumb-icon" style="filter:grayscale(1);opacity:0.5">🌍</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">لوردس موبايل</div>
+        </div>
+        <div class="game-item" onclick="openSheet('بوكيمون','PokeCoins 100','1.5 $','540 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#f57f17,#f9a825)">
+            <div class="game-thumb-icon">🐾</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">بوكيمون GO</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ══════════ PUBG SUB PAGE ══════════ -->
+    <div class="page" id="page-pubg">
+      <div class="page-header-img" style="background:linear-gradient(135deg,#1a237e,#283593)">
+        <div class="page-header-img-bg">🎯</div>
+        <div class="page-header-img-overlay"></div>
+        <div class="page-header-img-content">
+          <button class="phic-back" onclick="goPage('games')"><i class="fas fa-arrow-right"></i></button>
+          <div class="phic-title" style="font-size:40px">بوبجي</div>
+          <div class="phic-sub">PUBG Mobile</div>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="ابحث في بوبجي...">
+      </div>
+
+      <!-- PUBG Sub categories -->
+      <div class="sub-items-grid">
+        <div class="game-item" onclick="goPage('pubg-packages')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#1a237e,#1e3a8a)">
+            <div class="game-thumb-icon">💎</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">بوبجي</div>
+        </div>
+        <div class="game-item" onclick="openSheet('بوبجي لايت','BC 60','0.5 $','180 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#283593,#1565c0)">
+            <div class="game-thumb-icon">💠</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">بوبجي لايت</div>
+        </div>
+        <div class="game-item" onclick="openSheet('عضويات بوبجي','Elite Pass الفصلي','4 $','1,440 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#4527a0,#512da8)">
+            <div class="game-thumb-icon">👑</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">عضويات بوبجي</div>
+        </div>
+        <div class="game-item" onclick="showToast('غير متاحة حالياً')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#1a237e,#283593);filter:grayscale(0.8)">
+            <div class="unavail-badge">غير متاحة</div>
+            <div class="game-thumb-icon" style="opacity:0.5">🎁</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">عروض بوبجي</div>
+        </div>
+        <div class="game-item" onclick="openSheet('بوبجي تركي','UC 60','0.25 $','90 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#c62828,#b71c1c)">
+            <div class="game-thumb-icon">🇹🇷</div>
+            <div class="game-thumb-overlay">
+              <div class="game-thumb-brand">شحن برو</div>
+            </div>
+          </div>
+          <div class="game-name">بوبجي تركي</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ══════════ PUBG PACKAGES ══════════ -->
+    <div class="page" id="page-pubg-packages">
+      <div class="product-header">
+        <button class="phic-back" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.1);border-radius:50%;width:36px;height:36px;border:none;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="goPage('pubg')"><i class="fas fa-arrow-right"></i></button>
+        <div class="product-header-icon">🎯</div>
+        <div class="product-header-name">بوبجي موبايل</div>
+        <div class="product-header-sub">PUBG Mobile UC</div>
+      </div>
+
+      <div class="action-tabs">
+        <button class="action-tab-btn active" onclick="">
+          <i class="fas fa-sync-alt"></i> تحديث
+        </button>
+        <button class="action-tab-btn" onclick="showToast('معلومات الخدمة')">
+          <i class="fas fa-info-circle"></i> معلومات
+        </button>
+        <button class="action-tab-btn" onclick="showToast('تغيير العرض')">
+          <i class="fas fa-th-large"></i>
+        </button>
+      </div>
+
+      <div class="packages-list">
+        <!-- Packages list -->
+        <div class="pkg-card" onclick="openSheet('بوبجي موبايل','بوبجي ( 10 شدة )','0.22 $','120 ر.ي')">
+          <div class="pkg-icon">🎯</div>
+          <div class="pkg-info">
+            <div class="pkg-cat">بوبجي</div>
+            <div class="pkg-name">بوبجي ( 10 شدة )</div>
+            <div class="pkg-prices">
+              <div class="pkg-price-main">120 ر.ي</div>
+              <div class="pkg-price-usd">$ 0.22</div>
+            </div>
+          </div>
+          <div class="pkg-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div class="pkg-card" onclick="openSheet('بوبجي موبايل','بوبجي ( 60 شدة )','0.88 $','480 ر.ي')">
+          <div class="pkg-icon">🎯</div>
+          <div class="pkg-info">
+            <div class="pkg-cat">بوبجي</div>
+            <div class="pkg-name">بوبجي ( 60 شدة )</div>
+            <div class="pkg-prices">
+              <div class="pkg-price-main">480 ر.ي</div>
+              <div class="pkg-price-usd">$ 0.88</div>
+            </div>
+          </div>
+          <div class="pkg-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div class="pkg-card" onclick="openSheet('بوبجي موبايل','بوبجي ( 120 شدة )','2 $','959 ر.ي')">
+          <div class="pkg-icon">🎯</div>
+          <div class="pkg-info">
+            <div class="pkg-cat">بوبجي</div>
+            <div class="pkg-name">بوبجي ( 120 شدة )</div>
+            <div class="pkg-prices">
+              <div class="pkg-price-main">959 ر.ي</div>
+              <div class="pkg-price-usd">$ 2</div>
+            </div>
+          </div>
+          <div class="pkg-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div class="pkg-card unavail">
+          <div class="pkg-unavail-ribbon">غير متاح</div>
+          <div class="pkg-icon" style="filter:grayscale(1)">🎯</div>
+          <div class="pkg-info">
+            <div class="pkg-cat">بوبجي</div>
+            <div class="pkg-name">بوبجي ( 180 شدة )</div>
+            <div class="pkg-prices">
+              <div class="pkg-price-main" style="background:#555">1,439 ر.ي</div>
+              <div class="pkg-price-usd">$ 3</div>
+            </div>
+          </div>
+          <div class="pkg-check"></div>
+        </div>
+
+        <div class="pkg-card" onclick="openSheet('بوبجي موبايل','بوبجي ( 240 شدة )','4 $','1,918 ر.ي')">
+          <div class="pkg-icon">🎯</div>
+          <div class="pkg-info">
+            <div class="pkg-cat">بوبجي</div>
+            <div class="pkg-name">بوبجي ( 240 شدة )</div>
+            <div class="pkg-prices">
+              <div class="pkg-price-main">1,918 ر.ي</div>
+              <div class="pkg-price-usd">$ 4</div>
+            </div>
+          </div>
+          <div class="pkg-check"><i class="fas fa-check"></i></div>
+        </div>
+
+        <div class="pkg-card unavail">
+          <div class="pkg-unavail-ribbon">غير متاح</div>
+          <div class="pkg-icon" style="filter:grayscale(1)">🎯</div>
+          <div class="pkg-info">
+            <div class="pkg-cat">بوبجي</div>
+            <div class="pkg-name">بوبجي ( 325 شدة )</div>
+            <div class="pkg-prices">
+              <div class="pkg-price-main" style="background:#555">2,398 ر.ي</div>
+              <div class="pkg-price-usd">$ 4</div>
+            </div>
+          </div>
+          <div class="pkg-check"></div>
+        </div>
+
+        <div class="pkg-card" onclick="openSheet('بوبجي موبايل','بوبجي ( 660 شدة )','8 $','5,750 ر.ي')">
+          <div class="pkg-icon">🎯</div>
+          <div class="pkg-info">
+            <div class="pkg-cat">بوبجي</div>
+            <div class="pkg-name">بوبجي ( 660 شدة )</div>
+            <div class="pkg-prices">
+              <div class="pkg-price-main">5,750 ر.ي</div>
+              <div class="pkg-price-usd">$ 8</div>
+            </div>
+          </div>
+          <div class="pkg-check"><i class="fas fa-check"></i></div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ══════════ APPS PAGE ══════════ -->
+    <div class="page" id="page-apps">
+      <div class="page-header-img" style="background:linear-gradient(135deg,#004d40,#006064)">
+        <div class="page-header-img-bg">📲</div>
+        <div class="page-header-img-overlay"></div>
+        <div class="page-header-img-content">
+          <button class="phic-back" onclick="goHome()"><i class="fas fa-arrow-right"></i></button>
+          <div class="phic-title">شحن البرامج</div>
+          <div class="phic-sub">أشحن برامجك المفضلة</div>
+        </div>
+      </div>
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="ابحث في شحن البرامج...">
+      </div>
+      <div class="items-grid">
+        <div class="game-item" onclick="openSheet('تيك توك','تيك توك 70 عملة','0.5 $','180 ر.ي')">
+          <div class="game-thumb" style="background:#000">
+            <div class="game-thumb-icon">🎵</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">تيك توك</div>
+        </div>
+        <div class="game-item" onclick="openSheet('بيلا','بيلا 70 Beans','0.6 $','216 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#880e4f,#ad1457)">
+            <div class="game-thumb-icon">💜</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">بيلا</div>
+        </div>
+        <div class="game-item" onclick="openSheet('يوهو','يوهو 30 نقاط','0.3 $','108 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#f57f17,#f9a825)">
+            <div class="game-thumb-icon">🎙️</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">يوهو</div>
+        </div>
+        <div class="game-item" onclick="openSheet('IMO','IMO 50 نقطة','0.4 $','144 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#0d47a1,#1565c0)">
+            <div class="game-thumb-icon">💬</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">IMO</div>
+        </div>
+        <div class="game-item" onclick="openSheet('سوقو','سوقو 50 عملة','0.5 $','180 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#4a148c,#6a1b9a)">
+            <div class="game-thumb-icon">🎪</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">سوقو</div>
+        </div>
+        <div class="game-item" onclick="openSheet('آهلان','آهلان 100 ماسة','1 $','360 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">
+            <div class="game-thumb-icon">🎉</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">آهلان</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ══════════ CARDS PAGE ══════════ -->
+    <div class="page" id="page-cards">
+      <div class="page-header-img" style="background:linear-gradient(135deg,#4a148c,#6a1b9a)">
+        <div class="page-header-img-bg">💳</div>
+        <div class="page-header-img-overlay"></div>
+        <div class="page-header-img-content">
+          <button class="phic-back" onclick="goHome()"><i class="fas fa-arrow-right"></i></button>
+          <div class="phic-title">البطاقات الرقمية</div>
+          <div class="phic-sub">بطاقات لجميع المنصات</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="game-item" onclick="openSheet('Google Play','بطاقة $5','5 $','1,800 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)">
+            <div class="game-thumb-icon">🏪</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">Google Play</div>
+        </div>
+        <div class="game-item" onclick="openSheet('App Store','بطاقة $5','5 $','1,800 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#1a237e,#0d47a1)">
+            <div class="game-thumb-icon">🍎</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">App Store</div>
+        </div>
+        <div class="game-item" onclick="openSheet('Steam','بطاقة $10','10 $','3,600 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#212121,#424242)">
+            <div class="game-thumb-icon">🎮</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">Steam</div>
+        </div>
+        <div class="game-item" onclick="openSheet('PlayStation','بطاقة $10','10 $','3,600 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#0d47a1,#1565c0)">
+            <div class="game-thumb-icon">🎮</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">PlayStation</div>
+        </div>
+        <div class="game-item" onclick="openSheet('Amazon','بطاقة $10','10 $','3,600 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#e65100,#bf360c)">
+            <div class="game-thumb-icon">📦</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">Amazon</div>
+        </div>
+        <div class="game-item" onclick="openSheet('iTunes','بطاقة $5','5 $','1,800 ر.ي')">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#880e4f,#ad1457)">
+            <div class="game-thumb-icon">🎵</div>
+            <div class="game-thumb-overlay"><div class="game-thumb-brand">شحن برو</div></div>
+          </div>
+          <div class="game-name">iTunes</div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ══════════ ORDERS PAGE ══════════ -->
+    <div class="page" id="page-orders">
+      <div class="orders-page">
+        <div style="font-size:18px;font-weight:900;margin-bottom:14px;padding-top:4px">طلباتي</div>
+
+        <!-- Filter tabs -->
+        <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px">
+          <button style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:none;background:var(--primary);color:#fff;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">الكل</button>
+          <button style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">قيد التنفيذ</button>
+          <button style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">مكتمل</button>
+          <button style="flex-shrink:0;padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer">ملغي</button>
+        </div>
+
+        <div class="order-card">
+          <div class="order-icon">🎯</div>
+          <div class="order-info">
+            <div class="order-name">بوبجي ( 60 شدة )</div>
+            <div class="order-id">رقم الطلب #00124</div>
+            <div class="order-price">480 ر.ي</div>
+          </div>
+          <div class="order-status status-done">مكتمل ✓</div>
+        </div>
+
+        <div class="order-card">
+          <div class="order-icon">🔥</div>
+          <div class="order-info">
+            <div class="order-name">فري فاير 100 ماسة</div>
+            <div class="order-id">رقم الطلب #00123</div>
+            <div class="order-price">540 ر.ي</div>
+          </div>
+          <div class="order-status status-process">قيد التنفيذ</div>
+        </div>
+
+        <div class="order-card">
+          <div class="order-icon">🏪</div>
+          <div class="order-info">
+            <div class="order-name">Google Play $5</div>
+            <div class="order-id">رقم الطلب #00122</div>
+            <div class="order-price">1,800 ر.ي</div>
+          </div>
+          <div class="order-status status-pending">قيد الانتظار</div>
+        </div>
+
+        <div class="order-card">
+          <div class="order-icon">🎵</div>
+          <div class="order-info">
+            <div class="order-name">تيك توك 70 عملة</div>
+            <div class="order-id">رقم الطلب #00120</div>
+            <div class="order-price">180 ر.ي</div>
+          </div>
+          <div class="order-status status-done">مكتمل ✓</div>
+        </div>
+
+        <div style="height:20px"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ WALLET PAGE ══════════ -->
+    <div class="page" id="page-wallet">
+      <div class="wallet-page">
+        <div style="font-size:18px;font-weight:900;margin-bottom:14px;padding-top:4px">محفظتي</div>
+
+        <div class="wallet-card">
+          <div class="wallet-balance-label">رصيدي الحالي</div>
+          <div>
+            <span class="wallet-balance-amount" id="walletAmt">0</span>
+            <span class="wallet-balance-cur"> ر.س</span>
+          </div>
+          <div class="wallet-actions">
+            <button class="wallet-action-btn" onclick="showToast('تواصل مع الإدارة لإضافة رصيد')">
+              <i class="fas fa-plus-circle"></i> شحن الرصيد
+            </button>
+            <button class="wallet-action-btn" onclick="showToast('سجل العمليات')">
+              <i class="fas fa-history"></i> السجل الكامل
+            </button>
+          </div>
+        </div>
+
+        <div style="font-size:14px;font-weight:800;margin-bottom:12px">آخر العمليات</div>
+        <div class="tx-list">
+          <div class="tx-item">
+            <div class="tx-icon credit"><i class="fas fa-plus"></i></div>
+            <div class="tx-info">
+              <div class="tx-name">إيداع رصيد</div>
+              <div class="tx-date">2026/02/18 • 10:30 ص</div>
+            </div>
+            <div class="tx-amount credit">+500 ر.س</div>
+          </div>
+          <div class="tx-item">
+            <div class="tx-icon debit"><i class="fas fa-minus"></i></div>
+            <div class="tx-info">
+              <div class="tx-name">بوبجي 60 شدة</div>
+              <div class="tx-date">2026/02/17 • 3:15 م</div>
+            </div>
+            <div class="tx-amount debit">-480 ر.ي</div>
+          </div>
+          <div class="tx-item">
+            <div class="tx-icon debit"><i class="fas fa-minus"></i></div>
+            <div class="tx-info">
+              <div class="tx-name">فري فاير 100 ماسة</div>
+              <div class="tx-date">2026/02/16 • 7:00 م</div>
+            </div>
+            <div class="tx-amount debit">-540 ر.ي</div>
+          </div>
+          <div class="tx-item">
+            <div class="tx-icon credit"><i class="fas fa-plus"></i></div>
+            <div class="tx-info">
+              <div class="tx-name">إيداع رصيد</div>
+              <div class="tx-date">2026/02/15 • 9:00 ص</div>
+            </div>
+            <div class="tx-amount credit">+200 ر.س</div>
+          </div>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ PROFILE PAGE ══════════ -->
+    <div class="page" id="page-profile">
+      <div class="profile-page">
+        <div style="font-size:18px;font-weight:900;margin-bottom:14px;padding-top:4px">حسابي</div>
+
+        <div class="profile-header-card">
+          <div class="profile-avatar">👤</div>
+          <div class="profile-name">اصيل محمد عبده الصالحي</div>
+          <div class="profile-id">العميل رقم: 112308</div>
+          <div class="profile-badge"><i class="fas fa-check-circle"></i> حساب نشط</div>
+        </div>
+
+        <div class="profile-menu-item" onclick="navTo('wallet')">
+          <div class="pmi-icon" style="background:rgba(0,230,118,0.12);color:var(--green)"><i class="fas fa-wallet"></i></div>
+          <div class="pmi-label">محفظتي</div>
+          <div style="color:var(--cyan);font-size:13px;font-weight:700">0 ر.س</div>
+          <div class="pmi-arrow"><i class="fas fa-chevron-left"></i></div>
+        </div>
+
+        <div class="profile-menu-item" onclick="navTo('orders')">
+          <div class="pmi-icon" style="background:rgba(30,111,255,0.12);color:var(--primary)"><i class="fas fa-shopping-bag"></i></div>
+          <div class="pmi-label">طلباتي</div>
+          <div class="pmi-arrow"><i class="fas fa-chevron-left"></i></div>
+        </div>
+
+        <div class="profile-menu-item" onclick="showToast('الإعدادات')">
+          <div class="pmi-icon" style="background:rgba(100,100,120,0.15);color:var(--text2)"><i class="fas fa-cog"></i></div>
+          <div class="pmi-label">الإعدادات</div>
+          <div class="pmi-arrow"><i class="fas fa-chevron-left"></i></div>
+        </div>
+
+        <div class="profile-menu-item" onclick="showToast('الدعم الفني')">
+          <div class="pmi-icon" style="background:rgba(0,212,255,0.12);color:var(--cyan)"><i class="fas fa-headset"></i></div>
+          <div class="pmi-label">الدعم الفني</div>
+          <div class="pmi-arrow"><i class="fas fa-chevron-left"></i></div>
+        </div>
+
+        <div class="profile-menu-item" onclick="showToast('تسجيل الخروج')">
+          <div class="pmi-icon" style="background:rgba(255,23,68,0.12);color:var(--red)"><i class="fas fa-sign-out-alt"></i></div>
+          <div class="pmi-label">تسجيل الخروج</div>
+          <div class="pmi-arrow"><i class="fas fa-chevron-left"></i></div>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+
+  <!-- BOTTOM SHEET OVERLAY -->
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+
+  <!-- ORDER BOTTOM SHEET -->
+  <div class="bottom-sheet" id="bottomSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title" id="sheetTitle">بوبجي ( 10 شدة )</div>
+        <div class="sheet-pkg" id="sheetPkg">بوبجي موبايل</div>
+      </div>
+      <button class="sheet-close" onclick="closeSheet()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="sheet-warning">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>تأكد من صحة جميع البيانات المدخلة قبل الإرسال<br>حيث لا يمكن التراجع عن الطلب بعد الإرسال</p>
+    </div>
+
+    <div class="sheet-fields">
+      <div class="sheet-field">
+        <label>رقم ايدي - اللاعب <span style="color:var(--red)">*</span></label>
+        <div class="field-icon-wrap">
+          <input class="field-input has-icon" type="text" placeholder="أدخل رقم الـ ID" id="fieldId">
+          <i class="fas fa-user field-icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-total">
+      <div class="sheet-total-row">
+        <span class="sheet-total-label">إجمالي السعر</span>
+        <div>
+          <span class="sheet-total-value" id="sheetPriceAR">120 ر.ي</span>
+          <span class="sheet-total-usd" id="sheetPriceUS"> • $ 0.22</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="sheet-buy-btn" onclick="submitOrder()">
+      <i class="fas fa-bolt"></i> شـراء
+    </button>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="navTo('home')">
+      <div class="nav-icon"><i class="fas fa-home"></i></div>
+      <div class="nav-label">الرئيسية</div>
+    </div>
+    <div class="nav-item" id="nav-orders" onclick="navTo('orders')">
+      <div class="nav-icon"><i class="fas fa-receipt"></i></div>
+      <div class="nav-label">عملياتي</div>
+    </div>
+    <div class="nav-center">
+      <div class="nav-center-btn" onclick="goHome()">
+        <i class="fas fa-th-large"></i>
+      </div>
+    </div>
+    <div class="nav-item" id="nav-wallet" onclick="navTo('wallet')">
+      <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="nav-label">التقارير</div>
+    </div>
+    <div class="nav-item" id="nav-profile" onclick="navTo('profile')">
+      <div class="nav-icon"><i class="fas fa-user-circle"></i></div>
+      <div class="nav-label">الملف الشخصي</div>
+    </div>
+  </div>
+
+</div><!-- end app -->
+
+<script>
+// ═══════════════════
+// NAVIGATION
+// ═══════════════════
+const pages = document.querySelectorAll('.page');
+const navItems = document.querySelectorAll('.nav-item');
+
+function showPage(id) {
+  pages.forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-' + id);
+  if (pg) pg.classList.add('active');
+  document.getElementById('mainContent').scrollTop = 0;
+}
+
+function goPage(id) {
+  showPage(id);
+  navItems.forEach(n => n.classList.remove('active'));
+}
+
+function goHome() {
+  showPage('home');
+  navItems.forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-home').classList.add('active');
+}
+
+function navTo(id) {
+  showPage(id);
+  navItems.forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+}
+
+// ═══════════════════
+// BOTTOM SHEET
+// ═══════════════════
+function openSheet(game, pkg, usd, ar) {
+  document.getElementById('sheetTitle').textContent = pkg;
+  document.getElementById('sheetPkg').textContent = game;
+  document.getElementById('sheetPriceAR').textContent = ar;
+  document.getElementById('sheetPriceUS').textContent = ' • ' + usd;
+  document.getElementById('fieldId').value = '';
+
+  document.getElementById('sheetOverlay').classList.add('show');
+  document.getElementById('bottomSheet').classList.add('open');
+}
+
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('show');
+  document.getElementById('bottomSheet').classList.remove('open');
+}
+
+function submitOrder() {
+  const id = document.getElementById('fieldId').value.trim();
+  if (!id) {
+    document.getElementById('fieldId').style.borderColor = 'var(--red)';
+    showToast('⚠️ أدخل رقم الـ ID');
+    return;
+  }
+  closeSheet();
+  showToast('✅ تم إرسال الطلب بنجاح!');
+}
+
+// ═══════════════════
+// TOAST
+// ═══════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════
+// HERO BANNER AUTO SLIDE
+// ═══════════════════
+const dots = document.querySelectorAll('.hero-dot');
+let dotIdx = 0;
+setInterval(() => {
+  dots[dotIdx].classList.remove('active');
+  dotIdx = (dotIdx + 1) % dots.length;
+  dots[dotIdx].classList.add('active');
+}, 2800);
+
+// ═══════════════════
+// FIELD FOCUS
+// ═══════════════════
+document.getElementById('fieldId').addEventListener('focus', function() {
+  this.style.borderColor = 'var(--primary)';
+});
+</script>
+</body>
+</html>

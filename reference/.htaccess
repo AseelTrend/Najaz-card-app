@@ -1,0 +1,193 @@
+RewriteEngine On
+
+# ✅ استثناء webhook من أي تحويل
+RewriteCond %{REQUEST_URI} ^/api/sms_webhook.php$ [NC]
+RewriteRule .* - [L]
+
+RewriteCond %{REQUEST_URI} ^/webhook.php$ [NC]
+RewriteRule .* - [L]
+
+RewriteCond %{REQUEST_URI} ^/usdt_webhook.php$ [NC]
+RewriteRule .* - [L]
+
+# 🔒 تحويل HTTPS لباقي الموقع فقط
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+
+
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ── Timezone: Saudi Arabia (UTC+3) ──────────────────
+<IfModule mod_php.c>
+    php_value date.timezone "Asia/Riyadh"
+</IfModule>
+<IfModule mod_php8.c>
+    php_value date.timezone "Asia/Riyadh"
+</IfModule>
+
+# Gzip Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json
+</IfModule>
+
+# LiteSpeed Cache
+<IfModule LiteSpeed>
+    CacheLookup on
+</IfModule>
+
+Options -Indexes
+
+# ─────────────────────────────────────────
+# 🔐 Security Headers (متوازنة - لا تكسر الموقع)
+# ─────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # [M-2 FIX] CSP مُحسَّنة — إزالة unsafe-inline من script-src
+    # نسمح بالـ inline styles فقط (ضروري للـ UI) لكن نمنع inline scripts
+    # المصادر الخارجية المسموح بها صراحةً فقط
+ 
+    # إخفاء معلومات السيرفر
+    Header unset X-Powered-By
+
+    # Permissions Policy
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# ─────────────────────────────────────────
+# 🔒 حماية الملفات الحساسة
+# ─────────────────────────────────────────
+<FilesMatch "\.(env|ini|log|conf|bak|sql)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# منع الوصول لملفات مخفية (مثل .git)
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ─────────────────────────────────────────
+# 🚫 منع تنفيذ PHP داخل uploads
+# ─────────────────────────────────────────
+<Directory "/uploads">
+    <FilesMatch "\.php$">
+        Deny from all
+    </FilesMatch>
+</Directory> 
+
+# ─────────────────────────────────────────
+# 🔥 حماية إضافية ضد الهجمات
+# ─────────────────────────────────────────
+RewriteCond %{QUERY_STRING} (\.\./|\<|\>|union|select|insert|drop|--|#) [NC]
+RewriteRule .* - [F,L]
+# ─────────────────────────────────────────
+# 🍪 تحسين الكوكيز (متوافقة)
+# ─────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header edit Set-Cookie ^(.*)$ "$1; HttpOnly; Secure; SameSite=Lax"
+</IfModule>
+
+# ─────────────────────────────────────────
+# 
+# ─────────────────────────────────────────
+# ⚡ Browser Cache — تسريع التحميل (Apache)
+# ─────────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # صور
+    ExpiresByType image/webp             "access plus 1 year"
+    ExpiresByType image/jpeg             "access plus 1 year"
+    ExpiresByType image/png              "access plus 1 year"
+    ExpiresByType image/gif              "access plus 1 year"
+    ExpiresByType image/svg+xml         "access plus 1 year"
+    ExpiresByType image/x-icon          "access plus 1 year"
+    ExpiresByType image/vnd.microsoft.icon "access plus 1 year"
+
+    # خطوط
+    ExpiresByType font/woff              "access plus 1 year"
+    ExpiresByType font/woff2             "access plus 1 year"
+    ExpiresByType application/font-woff  "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+
+    # CSS / JS
+    ExpiresByType text/css               "access plus 6 months"
+    ExpiresByType application/javascript "access plus 6 months"
+    ExpiresByType text/javascript        "access plus 6 months"
+
+    # HTML / PHP (لا نكاش)
+    ExpiresByType text/html              "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # صور وخطوط — immutable (لا تتغير بدون تغيير الاسم)
+    <FilesMatch "\.(webp|jpg|jpeg|png|gif|ico|svg|woff|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # CSS / JS — قابل للتحديث لكن يُكاش لفترة طويلة
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=15552000"
+    </FilesMatch>
+</IfModule>
+
+
+
+RewriteEngine On
+
+# ===== استثناءات - السماح لصفحات الاختصار بالعمل بحرية =====
+RewriteRule ^gwats(\.php)?$ gwats.php [L,NS,E=no-gzip:1]
+RewriteRule ^play(\.php)?$ play.php [L,NS,E=no-gzip:1]
+RewriteRule ^n(\.php)?$ n.php [L,NS,E=no-gzip:1]
+
+# السماح لهذين الملفين قبل أي حماية
+<Files "gwats.php">
+    Allow from all
+    Satisfy Any
+    AuthType None
+    Require all granted
+</Files>
+
+<Files "play.php">
+    Allow from all
+    Satisfy Any
+    AuthType None
+    Require all granted
+</Files>
+# ===== نهاية الاستثناءات =====
+
+
+
+<Files "diag.php">
+    Satisfy Any
+    Allow from all
+    Require all granted
+</Files>
+
+
+
+
+# امنع فتح ابملفات
+RewriteEngine On
+
+# منع الوصول المباشر إلى مجلد sections وأي ملف بداخله
+RewriteRule ^sections(/.*)?$ - [F,L]
+
+
+RewriteEngine On
+
+# استثناء مجلد ap4stor
+RewriteRule ^ap4stor(/.*)?$ - [L]
+
+RewriteRule ^oranosmarket(/.*)?$ - [L]
+
+
