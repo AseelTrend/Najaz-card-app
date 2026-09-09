@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="njaz_app"
+        android:label="نجاز كارد بلاس"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
