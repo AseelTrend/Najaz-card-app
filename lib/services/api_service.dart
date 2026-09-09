@@ -101,6 +101,12 @@ class ApiService {
     return data['categories'] as List<dynamic>;
   }
 
+  static Future<List<dynamic>> getBanners() async {
+    final res = await http.get(_u('banners.php'));
+    final data = _parse(res);
+    return (data['banners'] as List<dynamic>?) ?? [];
+  }
+
   static Future<List<dynamic>> getServices({int? categoryId}) async {
     final headers = await _authHeaders();
     final res = await http.get(

@@ -18,6 +18,9 @@ class _BannerData {
   final String tag;
   final IconData icon;
   final List<Color> colors;
+  final Color textColor;
+  final Color accentColor;
+  final String imageUrl;
 
   const _BannerData({
     required this.title,
@@ -25,6 +28,9 @@ class _BannerData {
     required this.tag,
     required this.icon,
     required this.colors,
+    this.textColor = Colors.white,
+    this.accentColor = AppColors.cyan,
+    this.imageUrl = '',
   });
 }
 
@@ -50,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final PageController _bannerController = PageController();
   Timer? _bannerTimer;
   int _bannerIndex = 0;
+  List<_BannerData> _banners = const [];
 
   @override
   void initState() {
@@ -58,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCategories();
     _loadOrders();
     _loadUnreadNotifications();
+    _loadBanners();
     _startBannerTimer();
   }
 
@@ -71,9 +79,48 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startBannerTimer() {
     _bannerTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_bannerController.hasClients) return;
-      final next = (_bannerIndex + 1) % 3;
+      final bannerCount = _banners.isEmpty ? 3 : _banners.length;
+      final next = (_bannerIndex + 1) % bannerCount;
       _bannerController.animateToPage(next, duration: const Duration(milliseconds: 450), curve: Curves.easeOutCubic);
     });
+  }
+
+  Future<void> _loadBanners() async {
+    try {
+      final banners = await ApiService.getBanners();
+      if (!mounted || banners.isEmpty) return;
+      setState(() => _banners = banners.map(_bannerFromApi).toList());
+    } catch (_) {}
+  }
+
+  _BannerData _bannerFromApi(dynamic raw) {
+    final banner = Map<String, dynamic>.from(raw as Map);
+    final bg = _gradientColors(banner['bg_color']?.toString());
+    return _BannerData(
+      title: banner['title']?.toString() ?? '',
+      subtitle: banner['subtitle']?.toString() ?? '',
+      tag: banner['tag']?.toString() ?? '',
+      icon: Icons.campaign_rounded,
+      colors: bg,
+      textColor: _parseColor(banner['text_color']?.toString(), Colors.white),
+      accentColor: _parseColor(banner['accent_color']?.toString(), AppColors.cyan),
+      imageUrl: banner['image_url']?.toString() ?? '',
+    );
+  }
+
+  List<Color> _gradientColors(String? value) {
+    final matches = RegExp(r'#[0-9a-fA-F]{6,8}').allMatches(value ?? '').map((match) => _parseColor(match.group(0), AppColors.primary)).toList();
+    if (matches.length >= 2) return matches.take(2).toList();
+    if (matches.length == 1) return [matches.first, AppColors.bg2];
+    return const [AppColors.primary, AppColors.primaryDark];
+  }
+
+  Color _parseColor(String? value, Color fallback) {
+    if (value == null) return fallback;
+    final hex = value.replaceFirst('#', '');
+    final normalized = hex.length == 6 ? 'FF$hex' : hex;
+    final parsed = int.tryParse(normalized, radix: 16);
+    return parsed == null ? fallback : Color(parsed);
   }
 
   Future<void> _loadUser() async {
@@ -332,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBannerSlider() {
-    const banners = [
+    final banners = _banners.isEmpty ? const [
       _BannerData(
         title: 'كروت الشبكات',
         subtitle: 'صارت في الجيب',
@@ -354,8 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: Icons.account_balance_wallet_rounded,
         colors: [Color(0xFF075C5D), Color(0xFF062B3D)],
       ),
-    ];
-
+    ] : _banners;
     return Container(
       height: 148,
       margin: const EdgeInsets.only(top: 14),
@@ -400,20 +446,25 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4), decoration: BoxDecoration(color: Colors.white.withOpacity(.12), borderRadius: BorderRadius.circular(20)), child: Text(banner.tag, style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold))),
+                if (banner.tag.isNotEmpty) Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4), decoration: BoxDecoration(color: banner.accentColor.withOpacity(.2), borderRadius: BorderRadius.circular(20)), child: Text(banner.tag, style: TextStyle(color: banner.accentColor, fontSize: 10, fontWeight: FontWeight.bold))),
                 const SizedBox(height: 8),
-                Text(banner.title, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(banner.title, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor, fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 3),
-                Text(banner.subtitle, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(banner.subtitle, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor.withOpacity(.72), fontSize: 12)),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          Container(width: 74, height: 74, decoration: BoxDecoration(color: Colors.white.withOpacity(.13), shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(.2))), child: Icon(banner.icon, color: Colors.white, size: 38)),
+          if (banner.imageUrl.isNotEmpty)
+            ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.network(banner.imageUrl, width: 108, height: 108, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _bannerIcon(banner)))
+          else
+            _bannerIcon(banner),
         ],
       ),
     );
   }
+
+  Widget _bannerIcon(_BannerData banner) => Container(width: 74, height: 74, decoration: BoxDecoration(color: banner.textColor.withOpacity(.13), shape: BoxShape.circle, border: Border.all(color: banner.textColor.withOpacity(.2))), child: Icon(banner.icon, color: banner.accentColor, size: 38));
 
   Widget _buildQuickServices() {
     if (_categoriesLoading) {
