@@ -241,6 +241,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> openSupportChat({bool newChat = false}) async {
     final headers = await _authHeaders(required: true);
+    headers['Accept'] = 'application/json';
     final res = await http.post(_u('chat.php'), headers: headers, body: {
       'action': newChat ? 'new_chat' : 'open_chat',
       'subject': 'استفسار من تطبيق نجاز كارد بلاس',

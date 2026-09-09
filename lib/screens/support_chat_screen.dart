@@ -52,8 +52,10 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       });
       _startPolling();
       _scrollToBottom();
-    } catch (_) {
-      if (mounted) setState(() => _error = 'تعذر فتح محادثة الدعم');
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'تعذر الاتصال بخدمة الدعم');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
