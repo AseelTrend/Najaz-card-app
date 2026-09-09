@@ -181,6 +181,15 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
     final serviceImage = service['image']?.toString() ?? '';
     final categoryImage = service['category_image']?.toString() ?? '';
     final fallbackImage = serviceImage.isNotEmpty ? serviceImage : categoryImage;
+    final image = fallbackImage.isEmpty
+        ? _servicePlaceholder()
+        : CachedNetworkImage(
+            imageUrl: 'https://njaz.net/$fallbackImage',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            errorWidget: (_, __, ___) => _servicePlaceholder(),
+          );
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ServiceDetailScreen(serviceId: service['id'])),
@@ -192,17 +201,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
               aspectRatio: 1,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  color: AppColors.card2,
-                  child: fallbackImage.isNotEmpty
-                        ? CachedNetworkImage(
-                          imageUrl: 'https://njaz.net/$fallbackImage',
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          errorWidget: (_, __, ___) => _servicePlaceholder(),
-                        )
-                      : _servicePlaceholder(),
-                ),
+                child: Container(color: AppColors.card2, child: image),
               ),
             ),
           ),
