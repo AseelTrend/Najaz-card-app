@@ -72,7 +72,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       color: AppColors.primary,
       backgroundColor: AppColors.card,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
         children: [
           if (_categories.isNotEmpty) ...[
             const Padding(
@@ -86,7 +86,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
                 crossAxisCount: 3,
                 mainAxisSpacing: 14,
                 crossAxisSpacing: 12,
-                childAspectRatio: 0.85,
+                childAspectRatio: 0.80,
               ),
               itemCount: _categories.length,
               itemBuilder: (context, i) => _categoryCard(_categories[i], i),
@@ -135,41 +135,40 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
         builder: (_) => CategoryScreen(categoryId: cat['id'], categoryName: cat['name'] ?? ''),
       )),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.border),
+          boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 10, offset: Offset(0, 4))],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: badgeColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: badgeColor.withOpacity(0.3)),
+            Expanded(
+              child: SizedBox.expand(
+                child: Container(
+                  color: badgeColor.withOpacity(0.15),
+                  child: hasImage
+                      ? Image.network(
+                          'https://njaz.net/${cat['image']}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: badgeColor, size: 34),
+                        )
+                      : Icon(Icons.folder_rounded, color: badgeColor, size: 34),
+                ),
               ),
-              child: hasImage
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(17),
-                      child: Image.network(
-                        'https://njaz.net/${cat['image']}',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: badgeColor, size: 28),
-                      ),
-                    )
-                  : Icon(Icons.folder_rounded, color: badgeColor, size: 28),
             ),
-            const SizedBox(height: 8),
-            Text(
-              cat['name'] ?? '',
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w600),
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+              child: Text(
+                cat['name'] ?? '',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFF0F172A), fontSize: 10, height: 1.3, fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),

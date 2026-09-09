@@ -496,7 +496,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: 3,
           crossAxisSpacing: 9,
           mainAxisSpacing: 9,
-          childAspectRatio: .86,
+          childAspectRatio: .80,
         ),
         itemBuilder: (context, index) => _buildCategoryCard(_categories[index], index),
       ),
@@ -513,40 +513,40 @@ class _HomeScreenState extends State<HomeScreen> {
       )),
       borderRadius: BorderRadius.circular(15),
       child: Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: Colors.white,
           border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [BoxShadow(color: Color(0x66000000), blurRadius: 10, offset: Offset(0, 4))],
         ),
-        padding: const EdgeInsets.all(8),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color.withOpacity(.12),
-                border: Border.all(color: color.withOpacity(.35)),
+            Expanded(
+              child: SizedBox.expand(
+                child: Container(
+                  color: color.withOpacity(.12),
+                  child: image.isEmpty
+                      ? Icon(Icons.folder_rounded, color: color, size: 34)
+                      : Image.network(
+                          'https://njaz.net/$image',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: color, size: 34),
+                        ),
+                ),
               ),
-              child: image.isEmpty
-                  ? Icon(Icons.folder_rounded, color: color, size: 21)
-                  : ClipOval(
-                      child: Image.network(
-                        'https://njaz.net/$image',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: color, size: 21),
-                      ),
-                    ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.text, fontSize: 11, fontWeight: FontWeight.w500),
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xFF0F172A), fontSize: 10, height: 1.3, fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),
