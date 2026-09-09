@@ -42,6 +42,10 @@ class StorageService {
     };
   }
 
+  static Future<void> saveSetting(String key, String value) => _storage.write(key: 'setting_$key', value: value);
+
+  static Future<String?> getSetting(String key) => _storage.read(key: 'setting_$key');
+
   static Future<void> clearAll() async {
     await _storage.deleteAll();
   }

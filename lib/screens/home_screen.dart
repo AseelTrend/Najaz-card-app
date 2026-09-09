@@ -7,6 +7,7 @@ import 'category_screen.dart';
 import 'login_screen.dart';
 import 'notifications_screen.dart';
 import 'orders_screen.dart';
+import 'profile_screen.dart';
 import 'wallet_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -172,7 +173,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildOtherTab() {
     if (_tabIndex == 1) return const CategoryBrowser(categoryId: null);
     if (_tabIndex == 3) return const OrdersScreen();
-    return Center(child: Text(_tabIndex == 2 ? 'التحويلات' : 'الملف', style: const TextStyle(color: AppColors.text)));
+    if (_tabIndex == 4) return ProfileScreen(onLogout: _logout);
+    return const Center(child: Text('التحويلات', style: TextStyle(color: AppColors.text)));
   }
 
   Widget _buildHeader() {

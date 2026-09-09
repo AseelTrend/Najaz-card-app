@@ -186,6 +186,41 @@ class ApiService {
     _parse(res);
   }
 
+  // ══════════════════ الملف الشخصي والأجهزة ══════════════════
+
+  static Future<Map<String, dynamic>> getProfile() async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.get(_u('profile.php', {'action': 'profile'}), headers: headers);
+    final data = _parse(res);
+    return data['user'] as Map<String, dynamic>;
+  }
+
+  static Future<String> updateProfileName(String name) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.post(_u('profile.php'), headers: headers, body: {
+      'action': 'update_name',
+      'full_name': name,
+    });
+    final data = _parse(res);
+    return data['name']?.toString() ?? name;
+  }
+
+  static Future<List<dynamic>> getDevices() async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.get(_u('profile.php', {'action': 'devices'}), headers: headers);
+    final data = _parse(res);
+    return (data['devices'] as List<dynamic>?) ?? [];
+  }
+
+  static Future<void> setDeviceBlocked({required int deviceId, required bool blocked}) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.post(_u('profile.php'), headers: headers, body: {
+      'action': blocked ? 'block_device' : 'unblock_device',
+      'device_id': '$deviceId',
+    });
+    _parse(res);
+  }
+
   // ══════════════════ المحفظة ══════════════════
 
   static Future<Map<String, dynamic>> getWallet() async {
