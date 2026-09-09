@@ -16,6 +16,7 @@ dependencies:
   uuid: ^4.3.3
   cupertino_icons: ^1.0.6
   file_picker: ^10.3.3
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
