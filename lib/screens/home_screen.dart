@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
           border: Border(top: BorderSide(color: AppColors.border)),
         ),
         child: NavigationBar(
-          currentIndex: _tabIndex,
+          selectedIndex: _tabIndex,
           onDestinationSelected: (i) => setState(() => _tabIndex = i),
           destinations: const [
             NavigationDestination(icon: Icon(Icons.home_rounded), label: 'الرئيسية'),
