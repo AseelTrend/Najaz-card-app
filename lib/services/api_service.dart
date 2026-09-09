@@ -149,6 +149,43 @@ class ApiService {
     return data['orders'] as List<dynamic>;
   }
 
+  // ══════════════════ الإشعارات ══════════════════
+
+  static Future<List<dynamic>> getNotifications({int limit = 50}) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.get(_u('notifications.php', {
+      'action': 'list',
+      'limit': '$limit',
+    }), headers: headers);
+    final data = _parse(res);
+    return (data['notifications'] as List<dynamic>?) ?? [];
+  }
+
+  static Future<int> getUnreadNotificationCount() async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.get(_u('notifications.php', {'action': 'unread_count'}), headers: headers);
+    final data = _parse(res);
+    return (data['count'] as num?)?.toInt() ?? 0;
+  }
+
+  static Future<void> markNotificationRead([int? id]) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.post(_u('notifications.php'), headers: headers, body: {
+      'action': 'mark_read',
+      if (id != null) 'id': '$id',
+    });
+    _parse(res);
+  }
+
+  static Future<void> deleteNotification(int id) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.post(_u('notifications.php'), headers: headers, body: {
+      'action': 'delete',
+      'id': '$id',
+    });
+    _parse(res);
+  }
+
   // ══════════════════ المحفظة ══════════════════
 
   static Future<Map<String, dynamic>> getWallet() async {

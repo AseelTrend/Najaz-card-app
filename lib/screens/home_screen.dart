@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../widgets/category_browser.dart';
 import 'category_screen.dart';
 import 'login_screen.dart';
+import 'notifications_screen.dart';
 import 'orders_screen.dart';
 import 'wallet_screen.dart';
 
@@ -18,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _tabIndex = 0;
   String _userName = '';
   String _balance = '0';
+  int _unreadNotificationCount = 0;
   bool _hideBalance = false;
   bool _showSyncAlert = true;
   List<dynamic> _categories = [];
@@ -33,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadUser();
     _loadCategories();
     _loadOrders();
+    _loadUnreadNotifications();
   }
 
   Future<void> _loadUser() async {
@@ -75,6 +78,18 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       if (mounted) setState(() => _ordersLoading = false);
     }
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final count = await ApiService.getUnreadNotificationCount();
+      if (mounted) setState(() => _unreadNotificationCount = count);
+    } catch (_) {}
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+    _loadUnreadNotifications();
   }
 
   Future<void> _logout() async {
@@ -174,7 +189,31 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         _roundHeaderButton(Icons.support_agent_rounded, () {}),
         const SizedBox(width: 8),
-        _roundHeaderButton(Icons.notifications_none_rounded, () {}),
+        _notificationButton(),
+      ],
+    );
+  }
+
+  Widget _notificationButton() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _roundHeaderButton(Icons.notifications_none_rounded, _openNotifications),
+        if (_unreadNotificationCount > 0)
+          Positioned(
+            top: -4,
+            left: -4,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: AppColors.red, shape: BoxShape.circle),
+              child: Text(
+                _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
       ],
     );
   }
