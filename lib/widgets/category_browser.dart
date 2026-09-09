@@ -110,8 +110,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
               itemCount: _services.length,
               itemBuilder: (context, i) => _serviceCard(_services[i]),
             ),
-          ],
-        ],
+            ],
       ),
     );
   }
@@ -172,7 +171,6 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
               ),
             ),
           ],
-        ],
       ),
     );
   }
