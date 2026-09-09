@@ -84,16 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
           color: AppColors.card,
           border: Border(top: BorderSide(color: AppColors.border)),
         ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.text2,
+        child: NavigationBar(
           currentIndex: _tabIndex,
-          onTap: (i) => setState(() => _tabIndex = i),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'الرئيسية'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'طلباتي'),
+          onDestinationSelected: (i) => setState(() => _tabIndex = i),
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home_rounded), label: 'الرئيسية'),
+            NavigationDestination(icon: Icon(Icons.receipt_long_rounded), label: 'طلباتي'),
           ],
         ),
       ),

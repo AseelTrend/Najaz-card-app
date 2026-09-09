@@ -7,11 +7,11 @@ class AppColors {
   AppColors._();
 
   // طبقات الخلفية
-  static const bg = Color(0xFF05080F);
-  static const bg2 = Color(0xFF090D1A);
-  static const card = Color(0xFF0E1525);
-  static const card2 = Color(0xFF151F35);
-  static const card3 = Color(0xFF1C2942);
+  static const bg = Color(0xFF070B14);
+  static const bg2 = Color(0xFF0B1120);
+  static const card = Color(0xFF111A2B);
+  static const card2 = Color(0xFF17233A);
+  static const card3 = Color(0xFF20304B);
   static final border = Colors.white.withOpacity(0.07);
 
   // الألوان الأساسية (نفس هوية الموقع)

@@ -88,23 +88,35 @@ class _LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.text2, fontSize: 13)),
                   const SizedBox(height: 32),
-                  _field(_loginCtrl, 'اسم المستخدم أو البريد الإلكتروني', Icons.person_outline_rounded),
-                  const SizedBox(height: 14),
-                  _field(_passCtrl, 'كلمة المرور', Icons.lock_outline_rounded, obscure: true),
-                  if (_need2fa) ...[
-                    const SizedBox(height: 14),
-                    _field(_totpCtrl, 'رمز المصادقة الثنائية', Icons.security_rounded,
-                        keyboardType: TextInputType.number),
-                  ],
-                  if (_error != null) ...[
-                    const SizedBox(height: 14),
-                    Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center),
-                  ],
-                  const SizedBox(height: 24),
-                  _gradientButton(
-                    label: 'دخول',
-                    loading: _loading,
-                    onPressed: _submit,
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      children: [
+                        _field(_loginCtrl, 'اسم المستخدم أو البريد الإلكتروني', Icons.person_outline_rounded),
+                        const SizedBox(height: 14),
+                        _field(_passCtrl, 'كلمة المرور', Icons.lock_outline_rounded, obscure: true),
+                        if (_need2fa) ...[
+                          const SizedBox(height: 14),
+                          _field(_totpCtrl, 'رمز المصادقة الثنائية', Icons.security_rounded,
+                              keyboardType: TextInputType.number),
+                        ],
+                        if (_error != null) ...[
+                          const SizedBox(height: 14),
+                          Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center),
+                        ],
+                        const SizedBox(height: 24),
+                        _gradientButton(
+                          label: 'دخول',
+                          loading: _loading,
+                          onPressed: _submit,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextButton(

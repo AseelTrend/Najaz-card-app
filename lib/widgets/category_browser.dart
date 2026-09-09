@@ -126,37 +126,45 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => CategoryScreen(categoryId: cat['id'], categoryName: cat['name'] ?? ''),
       )),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              color: badgeColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: badgeColor.withOpacity(0.3)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: badgeColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: badgeColor.withOpacity(0.3)),
+              ),
+              child: hasImage
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(17),
+                      child: Image.network(
+                        'https://njaz.net/${cat['image']}',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: badgeColor, size: 28),
+                      ),
+                    )
+                  : Icon(Icons.folder_rounded, color: badgeColor, size: 28),
             ),
-            child: hasImage
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(17),
-                    child: Image.network(
-                      'https://njaz.net/${cat['image']}',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: badgeColor, size: 28),
-                    ),
-                  )
-                : Icon(Icons.folder_rounded, color: badgeColor, size: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            cat['name'] ?? '',
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              cat['name'] ?? '',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
     );
   }
