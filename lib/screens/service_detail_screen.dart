@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 
@@ -184,9 +185,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         if (_service!['image'] != null && _service!['image'].toString().isNotEmpty)
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.network('https://njaz.net/${_service!['image']}',
+                            child: CachedNetworkImage(imageUrl: 'https://njaz.net/${_service!['image']}',
                                 height: 160, fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const SizedBox()),
+                              errorWidget: (_, __, ___) => const SizedBox()),
                           ),
                         const SizedBox(height: 16),
                         Text(_service!['name'] ?? '',

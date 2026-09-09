@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
@@ -456,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(width: 16),
           if (banner.imageUrl.isNotEmpty)
-            ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.network(banner.imageUrl, width: 108, height: 108, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _bannerIcon(banner)))
+            ClipRRect(borderRadius: BorderRadius.circular(16), child: CachedNetworkImage(imageUrl: banner.imageUrl, width: 108, height: 108, fit: BoxFit.cover, errorWidget: (_, __, ___) => _bannerIcon(banner)))
           else
             _bannerIcon(banner),
         ],
@@ -528,10 +529,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: color.withOpacity(.12),
                   child: image.isEmpty
                       ? Icon(Icons.folder_rounded, color: color, size: 34)
-                      : Image.network(
-                          'https://njaz.net/$image',
+                      : CachedNetworkImage(
+                          imageUrl: 'https://njaz.net/$image',
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: color, size: 34),
+                          errorWidget: (_, __, ___) => Icon(Icons.folder_rounded, color: color, size: 34),
                         ),
                 ),
               ),

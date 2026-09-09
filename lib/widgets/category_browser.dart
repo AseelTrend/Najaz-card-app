@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../screens/service_detail_screen.dart';
@@ -149,10 +150,10 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
                 child: Container(
                   color: badgeColor.withOpacity(0.15),
                   child: hasImage
-                      ? Image.network(
-                          'https://njaz.net/${cat['image']}',
+                        ? CachedNetworkImage(
+                          imageUrl: 'https://njaz.net/${cat['image']}',
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: badgeColor, size: 34),
+                          errorWidget: (_, __, ___) => Icon(Icons.folder_rounded, color: badgeColor, size: 34),
                         )
                       : Icon(Icons.folder_rounded, color: badgeColor, size: 34),
                 ),
@@ -194,11 +195,11 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
                 child: Container(
                   color: AppColors.card2,
                   child: fallbackImage.isNotEmpty
-                      ? Image.network(
-                          'https://njaz.net/$fallbackImage',
+                        ? CachedNetworkImage(
+                          imageUrl: 'https://njaz.net/$fallbackImage',
                           fit: BoxFit.cover,
                           width: double.infinity,
-                          errorBuilder: (_, __, ___) => _servicePlaceholder(),
+                          errorWidget: (_, __, ___) => _servicePlaceholder(),
                         )
                       : _servicePlaceholder(),
                 ),

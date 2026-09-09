@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import 'topup_manual_detail_screen.dart';
@@ -371,7 +372,7 @@ class _MethodCard extends StatelessWidget {
                 child: imageUrl != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(13),
-                        child: Image.network(imageUrl!, fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(icon, color: color)),
+                        child: CachedNetworkImage(imageUrl: imageUrl!, fit: BoxFit.contain, errorWidget: (_, __, ___) => Icon(icon, color: color)),
                       )
                     : Icon(icon, color: color),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 
@@ -103,7 +104,7 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
               Center(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: Image.network(widget.imageUrl!, height: 70, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                  child: CachedNetworkImage(imageUrl: widget.imageUrl!, height: 70, errorWidget: (_, __, ___) => const SizedBox.shrink()),
                 ),
               ),
               const SizedBox(height: 16),
