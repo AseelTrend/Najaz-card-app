@@ -17,6 +17,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   final _quantityCtrl = TextEditingController();
   int _quantity = 1;
   bool _loading = true;
+  bool _hasCoupons = false;
   bool _placing = false;
   String? _error;
 
@@ -29,11 +30,16 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   Future<void> _load() async {
     try {
       final service = await ApiService.getServiceDetail(widget.serviceId);
+      var hasCoupons = false;
+      try {
+        hasCoupons = await ApiService.serviceHasCoupons(widget.serviceId);
+      } catch (_) {}
       for (final f in (service['fields'] as List<dynamic>)) {
         _fieldControllers[f['field_name']] = TextEditingController();
       }
       setState(() {
         _service = service;
+        _hasCoupons = hasCoupons;
         _quantity = _minQuantity;
         _quantityCtrl.text = '$_quantity';
       });
@@ -284,21 +290,23 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                               ),
                             )),
 
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _couponCtrl,
-                          style: const TextStyle(color: AppColors.text),
-                          decoration: InputDecoration(
-                            labelText: 'كود الخصم (اختياري)',
-                            labelStyle: const TextStyle(color: AppColors.text2),
-                            filled: true,
-                            fillColor: AppColors.card2,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide.none,
+                        if (_hasCoupons) ...[
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _couponCtrl,
+                            style: const TextStyle(color: AppColors.text),
+                            decoration: InputDecoration(
+                              labelText: 'كود الخصم (اختياري)',
+                              labelStyle: const TextStyle(color: AppColors.text2),
+                              filled: true,
+                              fillColor: AppColors.card2,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
 
                         if (_error != null) ...[
                           const SizedBox(height: 14),

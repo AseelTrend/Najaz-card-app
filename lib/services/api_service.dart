@@ -124,6 +124,12 @@ class ApiService {
     return data['service'] as Map<String, dynamic>;
   }
 
+  static Future<bool> serviceHasCoupons(int serviceId) async {
+    final res = await http.get(_u('coupons.php', {'service_id': '$serviceId'}));
+    final data = _parse(res);
+    return data['has_coupons'] == true;
+  }
+
   // ══════════════════ Orders ══════════════════
 
   static Future<Map<String, dynamic>> placeOrder({
