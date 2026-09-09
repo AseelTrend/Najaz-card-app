@@ -9,10 +9,13 @@ $userId = mobileAuthorizeRequest($pdo, false); // false = التوكن اختي�
 
 $categoryId = $_GET['category_id'] ?? null;
 
-$sql = "SELECT * FROM services WHERE status = 1 AND deleted_at IS NULL";
+$sql = "SELECT services.*, categories.image AS category_image
+    FROM services
+    LEFT JOIN categories ON categories.id = services.category_id
+    WHERE services.status = 1 AND services.deleted_at IS NULL";
 $params = [];
 if ($categoryId) {
-    $sql .= " AND category_id = ?";
+    $sql .= " AND services.category_id = ?";
     $params[] = $categoryId;
 }
 $sql .= " ORDER BY sort_order ASC, id ASC";
@@ -35,6 +38,7 @@ foreach ($services as $s) {
         'name'        => $s['name'],
         'description' => $s['description'],
         'image'       => $s['image'],
+        'category_image' => $s['category_image'],
         'price'       => round($price, 2),
         'min_qty'     => (int)$s['min_qty'],
         'max_qty'     => (int)$s['max_qty'],

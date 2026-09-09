@@ -178,6 +178,9 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
   }
 
   Widget _serviceCard(dynamic service) {
+    final serviceImage = service['image']?.toString() ?? '';
+    final categoryImage = service['category_image']?.toString() ?? '';
+    final fallbackImage = serviceImage.isNotEmpty ? serviceImage : categoryImage;
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ServiceDetailScreen(serviceId: service['id'])),
@@ -195,13 +198,21 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: (service['image'] != null && service['image'].toString().isNotEmpty)
+                child: fallbackImage.isNotEmpty
                     ? Image.network(
-                        'https://njaz.net/${service['image']}',
+                    'https://njaz.net/$fallbackImage',
                         fit: BoxFit.cover,
                         width: double.infinity,
                         errorBuilder: (_, __, ___) =>
+                      categoryImage.isNotEmpty && fallbackImage != categoryImage
+                        ? Image.network(
+                          'https://njaz.net/$categoryImage',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, __, ___) =>
                             const Icon(Icons.image_not_supported, color: AppColors.text2),
+                          )
+                        : const Icon(Icons.image_not_supported, color: AppColors.text2),
                       )
                     : Container(
                         color: AppColors.card2,
