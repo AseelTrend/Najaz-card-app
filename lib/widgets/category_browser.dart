@@ -4,8 +4,7 @@ import '../theme/app_colors.dart';
 import '../screens/service_detail_screen.dart';
 import '../screens/category_screen.dart';
 
-/// يعرض إما الأقسام الفرعية لقسم معيّن (إذا وجدت) أو خدماته مباشرة
-/// (إذا كان هذا القسم "ورقة أخيرة" بدون أقسام فرعية).
+/// يعرض الأقسام الفرعية والخدمات المباشرة للقسم نفسه معًا.
 /// categoryId = null يعني الأقسام الرئيسية بالموقع.
 class CategoryBrowser extends StatefulWidget {
   final int? categoryId;
@@ -19,7 +18,6 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
   List<dynamic> _categories = [];
   List<dynamic> _services = [];
   bool _loading = true;
-  bool _showServices = false;
   String? _error;
 
   @override
@@ -35,18 +33,20 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
     });
     try {
       final cats = await ApiService.getCategories(parentId: widget.categoryId);
-      if (cats.isNotEmpty) {
-        setState(() {
-          _categories = cats;
-          _showServices = false;
-        });
+      List<dynamic> services;
+      if (widget.categoryId == null && cats.isNotEmpty) {
+        final servicesByCategory = await Future.wait(
+          cats.map((category) => ApiService.getServices(categoryId: category['id'] as int)),
+        );
+        services = servicesByCategory.expand((items) => items).toList();
       } else {
-        final services = await ApiService.getServices(categoryId: widget.categoryId);
-        setState(() {
-          _services = services;
-          _showServices = true;
-        });
+        services = await ApiService.getServices(categoryId: widget.categoryId);
       }
+      if (!mounted) return;
+      setState(() {
+        _categories = cats;
+        _services = services;
+      });
     } catch (e) {
       setState(() => _error = 'تعذر تحميل البيانات، تحقق من الإنترنت');
     } finally {
@@ -63,29 +63,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       return Center(child: Text(_error!, style: const TextStyle(color: AppColors.red)));
     }
 
-    if (_showServices) {
-      if (_services.isEmpty) {
-        return _emptyState('لا توجد خدمات هنا حالياً');
-      }
-      return RefreshIndicator(
-        onRefresh: _load,
-        color: AppColors.primary,
-        backgroundColor: AppColors.card,
-        child: GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.85,
-          ),
-          itemCount: _services.length,
-          itemBuilder: (context, i) => _serviceCard(_services[i]),
-        ),
-      );
-    }
-
-    if (_categories.isEmpty) {
+    if (_categories.isEmpty && _services.isEmpty) {
       return _emptyState('لا توجد أقسام هنا حالياً');
     }
 
@@ -93,16 +71,46 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       onRefresh: _load,
       color: AppColors.primary,
       backgroundColor: AppColors.card,
-      child: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 14,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.85,
-        ),
-        itemCount: _categories.length,
-        itemBuilder: (context, i) => _categoryCard(_categories[i], i),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        children: [
+          if (_categories.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Text('الأقسام الفرعية', style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
+            ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: _categories.length,
+              itemBuilder: (context, i) => _categoryCard(_categories[i], i),
+            ),
+          ],
+          if (_services.isNotEmpty) ...[
+            Padding(
+              padding: EdgeInsets.only(top: _categories.isEmpty ? 0 : 22, bottom: 10),
+              child: Text(_categories.isEmpty ? 'الخدمات' : 'الخدمات المتاحة', style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
+            ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: _services.length,
+              itemBuilder: (context, i) => _serviceCard(_services[i]),
+            ),
+          ],
+        ],
       ),
     );
   }
