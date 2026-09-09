@@ -33,12 +33,18 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
 
   Future<void> _initiate() async {
     final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
-    final phone = _phoneCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+    var phone = _phoneCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (phone.startsWith('00967')) {
+      phone = phone.substring(2);
+    } else if (phone.startsWith('7') && phone.length == 9) {
+      phone = '967$phone';
+    }
+    _phoneCtrl.text = phone;
     if (amount < 100) {
       setState(() => _error = 'الحد الأدنى للشحن 100 ريال');
       return;
     }
-    if (phone.length < 9) {
+    if (!phone.startsWith('967') || phone.length != 12) {
       setState(() => _error = 'أدخل رقم هاتفك في فلوسك بشكل صحيح');
       return;
     }
