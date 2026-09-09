@@ -213,6 +213,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.text2, fontSize: 10, fontWeight: FontWeight.w600),
           ),
+        ],
         ),
       ),
     );
