@@ -101,10 +101,10 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+                crossAxisCount: 3,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 0.85,
+                childAspectRatio: 0.82,
               ),
               itemCount: _services.length,
               itemBuilder: (context, i) => _serviceCard(_services[i]),
@@ -184,61 +184,39 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ServiceDetailScreen(serviceId: service['id'])),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-        ),
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
+      child: Column(
+        children: [
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: fallbackImage.isNotEmpty
-                    ? Image.network(
-                    'https://njaz.net/$fallbackImage',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        errorBuilder: (_, __, ___) =>
-                      categoryImage.isNotEmpty && fallbackImage != categoryImage
-                        ? Image.network(
-                          'https://njaz.net/$categoryImage',
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  color: AppColors.card2,
+                  child: fallbackImage.isNotEmpty
+                      ? Image.network(
+                          'https://njaz.net/$fallbackImage',
                           fit: BoxFit.cover,
                           width: double.infinity,
-                          errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.image_not_supported, color: AppColors.text2),
-                          )
-                        : const Icon(Icons.image_not_supported, color: AppColors.text2),
-                      )
-                    : Container(
-                        color: AppColors.card2,
-                        child: const Center(child: Icon(Icons.widgets_rounded, color: AppColors.text2, size: 30)),
-                      ),
+                          errorBuilder: (_, __, ___) => _servicePlaceholder(),
+                        )
+                      : _servicePlaceholder(),
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              service['name'] ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text('\$${service['price']}',
-                  style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
-            ),
-          ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            service['name'] ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.text2, fontSize: 10, fontWeight: FontWeight.w600),
+          ),
         ),
       ),
     );
   }
+
+  Widget _servicePlaceholder() => const Center(child: Icon(Icons.widgets_rounded, color: AppColors.text2, size: 30));
 }
