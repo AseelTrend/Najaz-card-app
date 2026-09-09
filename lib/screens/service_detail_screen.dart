@@ -14,6 +14,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   Map<String, dynamic>? _service;
   final Map<String, TextEditingController> _fieldControllers = {};
   final _couponCtrl = TextEditingController();
+  final _quantityCtrl = TextEditingController();
   int _quantity = 1;
   bool _loading = true;
   bool _placing = false;
@@ -33,7 +34,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       }
       setState(() {
         _service = service;
-        _quantity = service['min_qty'] ?? 1;
+        _quantity = _minQuantity;
+        _quantityCtrl.text = '$_quantity';
       });
     } catch (e) {
       setState(() => _error = 'تعذر تحميل الخدمة');
@@ -41,6 +43,40 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  @override
+  void dispose() {
+    for (final controller in _fieldControllers.values) {
+      controller.dispose();
+    }
+    _couponCtrl.dispose();
+    _quantityCtrl.dispose();
+    super.dispose();
+  }
+
+  int get _minQuantity => int.tryParse('${_service?['min_qty'] ?? 1}') ?? 1;
+  int get _maxQuantity => int.tryParse('${_service?['max_qty'] ?? 9999}') ?? 9999;
+  double get _unitPrice => double.tryParse('${_service?['price'] ?? 0}') ?? 0;
+  double get _totalPrice => _unitPrice * _quantity;
+
+  void _setQuantity(int value) {
+    final clamped = value.clamp(_minQuantity, _maxQuantity).toInt();
+    setState(() {
+      _quantity = clamped;
+      _quantityCtrl.value = TextEditingValue(
+        text: '$clamped',
+        selection: TextSelection.collapsed(offset: '$clamped'.length),
+      );
+    });
+  }
+
+  void _quantityChanged(String value) {
+    final parsed = int.tryParse(value);
+    if (parsed == null) return;
+    setState(() => _quantity = parsed.clamp(_minQuantity, _maxQuantity).toInt());
+  }
+
+  void _normalizeQuantity() => _setQuantity(int.tryParse(_quantityCtrl.text) ?? _minQuantity);
 
   Future<void> _placeOrder() async {
     for (final f in (_service!['fields'] as List<dynamic>)) {
@@ -177,17 +213,50 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                               const Text('الكمية', style: TextStyle(color: AppColors.text)),
                               const Spacer(),
                               IconButton(
-                                onPressed: _quantity > (_service!['min_qty'] ?? 1)
-                                    ? () => setState(() => _quantity--)
-                                    : null,
+                                onPressed: _quantity > _minQuantity ? () => _setQuantity(_quantity - 1) : null,
                                 icon: const Icon(Icons.remove_circle_outline_rounded, color: AppColors.text2),
                               ),
-                              Text('$_quantity', style: const TextStyle(color: AppColors.text, fontSize: 16)),
+                              SizedBox(
+                                width: 72,
+                                child: TextField(
+                                  controller: _quantityCtrl,
+                                  onChanged: _quantityChanged,
+                                  onEditingComplete: _normalizeQuantity,
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.bold),
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    filled: true,
+                                    fillColor: AppColors.card2,
+                                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                                    contentPadding: EdgeInsets.symmetric(vertical: 9),
+                                  ),
+                                ),
+                              ),
                               IconButton(
-                                onPressed: _quantity < (_service!['max_qty'] ?? 9999)
-                                    ? () => setState(() => _quantity++)
-                                    : null,
+                                onPressed: _quantity < _maxQuantity ? () => _setQuantity(_quantity + 1) : null,
                                 icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.text2),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Text('الإجمالي', style: TextStyle(color: AppColors.text2, fontSize: 13)),
+                              const Spacer(),
+                              Text(
+                                '\$${_totalPrice.toStringAsFixed(2)}',
+                                style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
