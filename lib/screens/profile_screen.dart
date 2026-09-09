@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
@@ -100,6 +101,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showMessage(String message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 
+  Future<void> _openPrivacyPolicy() async {
+    final uri = Uri.parse('https://njaz.net/page.php?slug=privacy');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      _showMessage('تعذر فتح سياسة الخصوصية');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,6 +126,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 14),
                   _sectionTitle('الإعدادات'),
                   _settingsCard(),
+                  const SizedBox(height: 14),
+                  _sectionTitle('المعلومات'),
+                  Container(
+                    decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+                    child: ListTile(
+                      leading: const Icon(Icons.privacy_tip_outlined, color: AppColors.cyan),
+                      title: const Text('سياسة الخصوصية'),
+                      subtitle: const Text('تعرّف على كيفية حماية بياناتك'),
+                      trailing: const Icon(Icons.open_in_new_rounded, color: AppColors.text2, size: 19),
+                      onTap: _openPrivacyPolicy,
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   _sectionTitle('الأجهزة المصرّحة'),
                   _devicesCard(),
