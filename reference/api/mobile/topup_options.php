@@ -78,6 +78,7 @@ $floosakImage   = getSetting('floosak_image') ?: '';
 // ── USDT BEP20 (نفس الجريان النشط بالموقع: usdt_deposit_request.php) ──
 $usdtEnabled       = false;
 $usdtWalletAddr    = '';
+$usdtImageUrl      = '';
 $usdtMinDep        = 1.00;
 $usdtTtlMin        = 30;
 $activeUsdtRequest = null;
@@ -86,6 +87,8 @@ try {
         require_once dirname(__DIR__, 2) . '/includes/usdt_deposit.php';
         $usdtEnabled    = getSetting('usdt_enabled') === '1' && !empty(getSetting('usdt_wallet_address'));
         $usdtWalletAddr = getSetting('usdt_wallet_address') ?: '';
+        $usdtImagePath  = trim((string)(getSetting('usdt_image') ?: ''));
+        $usdtImageUrl   = $usdtImagePath !== '' ? rtrim(SITE_URL, '/') . '/' . ltrim($usdtImagePath, '/') : '';
         $usdtMinDep     = (float)(getSetting('usdt_min_deposit') ?: '1.00');
         $usdtTtlMin     = (int)(getSetting('usdt_request_ttl') ?: 30);
         if ($usdtEnabled) {
@@ -157,6 +160,7 @@ jsonOutMobile(true, 'topup options fetched', [
     ],
     'usdt' => [
         'enabled'          => $usdtEnabled,
+        'image_url'        => $usdtImageUrl ?: null,
         'min_deposit'      => $usdtMinDep,
         'ttl_minutes'      => $usdtTtlMin,
         'wallet_address'   => $usdtWalletAddr,

@@ -180,15 +180,29 @@ class _TopupScreenState extends State<TopupScreen> with SingleTickerProviderStat
 
   // ══════════════════ مباشر (تلقائي) ══════════════════
   Widget _buildAutoTab() {
+    final autoMethods = ((_options?['payment_methods'] as List<dynamic>?) ?? [])
+        .where((method) => (method['payment_mode'] ?? 'manual') == 'auto')
+        .toList();
     final usdt = _options?['usdt'] as Map<String, dynamic>? ?? {};
     final binance = _options?['binance'] as Map<String, dynamic>? ?? {};
     final floosak = _options?['floosak'] as Map<String, dynamic>? ?? {};
 
     final cards = <Widget>[];
+    for (final method in autoMethods) {
+      cards.add(_MethodCard(
+        title: method['name']?.toString() ?? 'طريقة دفع مباشرة',
+        subtitle: method['description']?.toString() ?? 'دفع مباشر',
+        imageUrl: method['image_url']?.toString(),
+        icon: Icons.bolt_rounded,
+        color: _parseColor(method['color']?.toString(), AppColors.cyan),
+        onTap: () => _requireKycThen(() => _push(TopupManualDetailScreen(method: method, exchangeRates: const []))),
+      ));
+    }
     if (binance['enabled'] == true) {
       cards.add(_MethodCard(
         title: 'مباشر Binance',
         subtitle: 'إيداع USDT عبر Binance Pay — شحن فوري',
+        imageUrl: binance['icon_url']?.toString(),
         icon: Icons.currency_bitcoin_rounded,
         color: const Color(0xFFF6C11A),
         onTap: () => _push(TopupBinanceScreen(settings: binance)),
@@ -198,6 +212,7 @@ class _TopupScreenState extends State<TopupScreen> with SingleTickerProviderStat
       cards.add(_MethodCard(
         title: 'USDT — BEP20',
         subtitle: 'BNB Smart Chain — شحن تلقائي فوري',
+        imageUrl: usdt['image_url']?.toString(),
         icon: Icons.account_balance_wallet_outlined,
         color: const Color(0xFF26A17B),
         onTap: () => _push(TopupUsdtScreen(settings: usdt)),
@@ -222,6 +237,14 @@ class _TopupScreenState extends State<TopupScreen> with SingleTickerProviderStat
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, i) => cards[i],
     );
+  }
+
+  Color _parseColor(String? value, Color fallback) {
+    if (value == null) return fallback;
+    final hex = value.replaceFirst('#', '');
+    final normalized = hex.length == 6 ? 'FF$hex' : hex;
+    final parsed = int.tryParse(normalized, radix: 16);
+    return parsed == null ? fallback : Color(parsed);
   }
 
   // ══════════════════ بكود ══════════════════
