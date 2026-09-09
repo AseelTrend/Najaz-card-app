@@ -246,7 +246,7 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
                 ),
               ],
             ),
-            const Divider(color: AppColors.border, height: 24),
+            Divider(color: AppColors.border, height: 24),
             const Text('عنوان المحفظة (BEP20)', style: TextStyle(color: AppColors.text2, fontSize: 12)),
             const SizedBox(height: 4),
             Row(

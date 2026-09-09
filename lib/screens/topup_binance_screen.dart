@@ -232,7 +232,7 @@ class _TopupBinanceScreenState extends State<TopupBinanceScreen> {
                   IconButton(icon: const Icon(Icons.copy_rounded, color: AppColors.primary, size: 18), onPressed: () => _copy(receiver)),
               ],
             ),
-            const Divider(color: AppColors.border, height: 24),
+            Divider(color: AppColors.border, height: 24),
             const Text('المبلغ المطلوب بالضبط', style: TextStyle(color: AppColors.text2, fontSize: 12)),
             const SizedBox(height: 4),
             Row(
