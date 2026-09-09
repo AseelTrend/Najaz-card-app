@@ -307,6 +307,7 @@ class ApiService {
     File? receiptFile,
   }) async {
     final headers = await _authHeaders();
+    headers['Accept'] = 'application/json';
     final request = http.MultipartRequest('POST', _u('topup_manual.php'))
       ..headers.addAll(headers)
       ..fields['method_id'] = '$methodId'

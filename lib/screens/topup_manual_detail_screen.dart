@@ -102,7 +102,7 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = 'تعذر إرسال الطلب، حاول مرة أخرى');
+      setState(() => _error = 'تعذر الاتصال بخدمة الشحن: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
