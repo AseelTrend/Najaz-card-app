@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -10,6 +11,22 @@ import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'support_chat_screen.dart';
 import 'wallet_screen.dart';
+
+class _BannerData {
+  final String title;
+  final String subtitle;
+  final String tag;
+  final IconData icon;
+  final List<Color> colors;
+
+  const _BannerData({
+    required this.title,
+    required this.subtitle,
+    required this.tag,
+    required this.icon,
+    required this.colors,
+  });
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _orders = [];
   bool _ordersLoading = true;
   String? _ordersError;
+  final PageController _bannerController = PageController();
+  Timer? _bannerTimer;
+  int _bannerIndex = 0;
 
   @override
   void initState() {
@@ -38,6 +58,22 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCategories();
     _loadOrders();
     _loadUnreadNotifications();
+    _startBannerTimer();
+  }
+
+  @override
+  void dispose() {
+    _bannerTimer?.cancel();
+    _bannerController.dispose();
+    super.dispose();
+  }
+
+  void _startBannerTimer() {
+    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!_bannerController.hasClients) return;
+      final next = (_bannerIndex + 1) % 3;
+      _bannerController.animateToPage(next, duration: const Duration(milliseconds: 450), curve: Curves.easeOutCubic);
+    });
   }
 
   Future<void> _loadUser() async {
@@ -163,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildHeader(),
           if (_showSyncAlert) _buildSyncAlert(),
           _buildBalanceHero(),
-          _buildPromoBanner(),
+          _buildBannerSlider(),
           _buildQuickServices(),
           _buildTransactions(),
         ],
@@ -295,12 +331,89 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPromoBanner() => Container(
-        margin: const EdgeInsets.only(top: 14),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        decoration: BoxDecoration(color: const Color(0xFF17131B), border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(15)),
-        child: Row(children: [const Icon(Icons.router_rounded, color: AppColors.primary, size: 43), const Spacer(), Column(crossAxisAlignment: CrossAxisAlignment.end, children: const [Text('كروت الشبكات', style: TextStyle(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.bold)), Text('صارت في الجيب', style: TextStyle(color: AppColors.text, fontSize: 12))])]),
-      );
+  Widget _buildBannerSlider() {
+    const banners = [
+      _BannerData(
+        title: 'كروت الشبكات',
+        subtitle: 'صارت في الجيب',
+        tag: 'متوفر الآن',
+        icon: Icons.router_rounded,
+        colors: [Color(0xFF123A77), Color(0xFF071B3D)],
+      ),
+      _BannerData(
+        title: 'اشحن ألعابك',
+        subtitle: 'بطاقات رقمية بأسعار مميزة',
+        tag: 'عروض رقمية',
+        icon: Icons.sports_esports_rounded,
+        colors: [Color(0xFF3B226D), Color(0xFF171033)],
+      ),
+      _BannerData(
+        title: 'رصيدك جاهز',
+        subtitle: 'شحن سريع وآمن من محفظتك',
+        tag: 'نجاز كارد بلاس',
+        icon: Icons.account_balance_wallet_rounded,
+        colors: [Color(0xFF075C5D), Color(0xFF062B3D)],
+      ),
+    ];
+
+    return Container(
+      height: 148,
+      margin: const EdgeInsets.only(top: 14),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _bannerController,
+            itemCount: banners.length,
+            onPageChanged: (index) => setState(() => _bannerIndex = index),
+            itemBuilder: (context, index) => _buildBannerSlide(banners[index]),
+          ),
+          Positioned(
+            bottom: 11,
+            left: 0,
+            right: 0,
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(banners.length, (index) {
+              final active = _bannerIndex == index;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: active ? 20 : 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(color: active ? Colors.white : Colors.white38, borderRadius: BorderRadius.circular(6)),
+              );
+            })),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBannerSlide(_BannerData banner) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 18, 22),
+      decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: banner.colors)),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4), decoration: BoxDecoration(color: Colors.white.withOpacity(.12), borderRadius: BorderRadius.circular(20)), child: Text(banner.tag, style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold))),
+                const SizedBox(height: 8),
+                Text(banner.title, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 3),
+                Text(banner.subtitle, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Container(width: 74, height: 74, decoration: BoxDecoration(color: Colors.white.withOpacity(.13), shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(.2))), child: Icon(banner.icon, color: Colors.white, size: 38)),
+        ],
+      ),
+    );
+  }
 
   Widget _buildQuickServices() {
     if (_categoriesLoading) {
