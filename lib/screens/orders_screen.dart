@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
+import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -105,14 +106,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             separatorBuilder: (_, __) => const SizedBox(height: 10),
                             itemBuilder: (context, i) {
                               final o = _orders[i];
-                              return Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: AppColors.card,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.border),
-                                ),
-                                child: Column(
+                              return InkWell(
+                                onTap: () {
+                                  final id = (o['id'] as num?)?.toInt();
+                                  if (id != null) {
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => OrderDetailScreen(orderId: id)));
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.card,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
@@ -150,6 +159,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                           style: const TextStyle(color: AppColors.text2, fontSize: 11)),
                                     ],
                                   ],
+                                  ),
                                 ),
                               );
                             },

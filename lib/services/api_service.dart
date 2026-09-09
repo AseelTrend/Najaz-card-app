@@ -149,6 +149,22 @@ class ApiService {
     return data['orders'] as List<dynamic>;
   }
 
+  static Future<Map<String, dynamic>> getOrderDetail(int orderId) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.get(_u('order_detail.php', {'id': '$orderId'}), headers: headers);
+    final data = _parse(res);
+    return data;
+  }
+
+  static Future<void> submitOrderObjection({required int orderId, required String reason}) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.post(_u('order_detail.php', {'id': '$orderId'}), headers: headers, body: {
+      'submit_objection': '1',
+      'reason': reason,
+    });
+    _parse(res);
+  }
+
   // ══════════════════ الإشعارات ══════════════════
 
   static Future<List<dynamic>> getNotifications({int limit = 50}) async {
