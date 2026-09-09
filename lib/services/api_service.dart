@@ -237,6 +237,38 @@ class ApiService {
     _parse(res);
   }
 
+  // ══════════════════ الدعم والمحادثة ══════════════════
+
+  static Future<Map<String, dynamic>> openSupportChat({bool newChat = false}) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.post(_u('chat.php'), headers: headers, body: {
+      'action': newChat ? 'new_chat' : 'open_chat',
+      'subject': 'استفسار من تطبيق نجاز كارد بلاس',
+    });
+    return _parse(res);
+  }
+
+  static Future<List<dynamic>> pollSupportChat({required int chatId, required int afterId}) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.get(_u('chat.php', {
+      'action': 'poll',
+      'chat_id': '$chatId',
+      'after_id': '$afterId',
+    }), headers: headers);
+    final data = _parse(res);
+    return (data['messages'] as List<dynamic>?) ?? [];
+  }
+
+  static Future<Map<String, dynamic>> sendSupportMessage({required int chatId, required String message}) async {
+    final headers = await _authHeaders(required: true);
+    final res = await http.post(_u('chat.php'), headers: headers, body: {
+      'action': 'send',
+      'chat_id': '$chatId',
+      'message': message,
+    });
+    return _parse(res);
+  }
+
   // ══════════════════ المحفظة ══════════════════
 
   static Future<Map<String, dynamic>> getWallet() async {

@@ -8,6 +8,7 @@ import 'login_screen.dart';
 import 'notifications_screen.dart';
 import 'orders_screen.dart';
 import 'profile_screen.dart';
+import 'support_chat_screen.dart';
 import 'wallet_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -189,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        _roundHeaderButton(Icons.support_agent_rounded, () {}),
+        _roundHeaderButton(Icons.support_agent_rounded, _openSupportChat),
         const SizedBox(width: 8),
         _notificationButton(),
       ],
@@ -218,6 +219,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
       ],
     );
+  }
+
+  Future<void> _openSupportChat() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SupportChatScreen()));
   }
 
   Widget _roundHeaderButton(IconData icon, VoidCallback onTap) {
