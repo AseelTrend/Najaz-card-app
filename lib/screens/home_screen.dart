@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/category_browser.dart';
+import 'category_screen.dart';
 import 'login_screen.dart';
 import 'orders_screen.dart';
 import 'wallet_screen.dart';
@@ -19,11 +20,19 @@ class _HomeScreenState extends State<HomeScreen> {
   String _balance = '0';
   bool _hideBalance = false;
   bool _showSyncAlert = true;
+  List<dynamic> _categories = [];
+  bool _categoriesLoading = true;
+  String? _categoriesError;
+  List<dynamic> _orders = [];
+  bool _ordersLoading = true;
+  String? _ordersError;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadCategories();
+    _loadOrders();
   }
 
   Future<void> _loadUser() async {
@@ -32,6 +41,40 @@ class _HomeScreenState extends State<HomeScreen> {
       _userName = user['name'] ?? '';
       _balance = user['balance'] ?? '0';
     });
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _categoriesLoading = true;
+      _categoriesError = null;
+    });
+    try {
+      final categories = await ApiService.getCategories();
+      if (!mounted) return;
+      setState(() => _categories = categories);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _categoriesError = 'تعذر تحميل أقسام الموقع');
+    } finally {
+      if (mounted) setState(() => _categoriesLoading = false);
+    }
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() {
+      _ordersLoading = true;
+      _ordersError = null;
+    });
+    try {
+      final orders = await ApiService.getOrders();
+      if (!mounted) return;
+      setState(() => _orders = orders);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _ordersError = 'تعذر تحميل الطلبات');
+    } finally {
+      if (mounted) setState(() => _ordersLoading = false);
+    }
   }
 
   Future<void> _logout() async {
@@ -71,11 +114,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: NavigationBar(
           selectedIndex: _tabIndex,
-          onDestinationSelected: (i) => setState(() => _tabIndex = i),
+          onDestinationSelected: (i) {
+            if (i == 2) {
+              _openWallet();
+              return;
+            }
+            setState(() => _tabIndex = i);
+          },
           destinations: const [
             NavigationDestination(icon: Icon(Icons.home_rounded), label: 'الرئيسية'),
             NavigationDestination(icon: Icon(Icons.grid_view_rounded), label: 'الخدمات'),
-            NavigationDestination(icon: Icon(Icons.swap_vert_rounded), label: 'تحويل'),
+            NavigationDestination(icon: Icon(Icons.add_card_rounded), label: 'شحن الرصيد'),
             NavigationDestination(icon: Icon(Icons.receipt_long_rounded), label: 'التقارير'),
             NavigationDestination(icon: Icon(Icons.person_outline_rounded), label: 'الملف'),
           ],
@@ -88,7 +137,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return RefreshIndicator(
       color: AppColors.primary,
       backgroundColor: AppColors.card,
-      onRefresh: _loadUser,
+      onRefresh: () async {
+        await Future.wait([_loadUser(), _loadCategories(), _loadOrders()]);
+      },
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 30),
         children: [
@@ -206,15 +257,166 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   Widget _buildQuickServices() {
-    const services = [('تحويلات مالية', Icons.swap_vert_rounded), ('حوالات محلية', Icons.receipt_long_outlined), ('الشحن والسداد', Icons.description_outlined), ('شراء اونلاين', Icons.phone_android_rounded), ('دفع المشتريات', Icons.shopping_bag_outlined), ('سحب نقدي', Icons.account_balance_wallet_outlined), ('المدفوعات', Icons.credit_card_outlined), ('خدمات ترفيه', Icons.sports_esports_outlined), ('جيبي', Icons.verified_user_outlined)];
+    if (_categoriesLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 32),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+    if (_categoriesError != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 22),
+        child: Center(child: Text(_categoriesError!, style: const TextStyle(color: AppColors.red))),
+      );
+    }
+    if (_categories.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 22),
+        child: Center(child: Text('لا توجد أقسام متاحة حالياً', style: TextStyle(color: AppColors.text2))),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: services.length, gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 9, mainAxisSpacing: 9, childAspectRatio: .86), itemBuilder: (context, index) {
-        final item = services[index];
-        return InkWell(onTap: () => setState(() => _tabIndex = 1), borderRadius: BorderRadius.circular(15), child: Container(decoration: BoxDecoration(color: AppColors.card, border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(15)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [if (index == 8) Align(alignment: Alignment.topRight, child: Container(margin: const EdgeInsets.only(right: 7), padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2), decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(4)), child: const Text('جديد', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)))), Container(width: 40, height: 40, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withOpacity(.12), border: Border.all(color: AppColors.primary.withOpacity(.35))), child: Icon(item.$2, color: AppColors.primary, size: 21)), const SizedBox(height: 8), Text(item.$1, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 11, fontWeight: FontWeight.w500))])));
-      }),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _categories.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 9,
+          mainAxisSpacing: 9,
+          childAspectRatio: .86,
+        ),
+        itemBuilder: (context, index) => _buildCategoryCard(_categories[index], index),
+      ),
     );
   }
 
-  Widget _buildTransactions() => Column(crossAxisAlignment: CrossAxisAlignment.end, children: [const SizedBox(height: 22), const Text('العمليات', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)), const SizedBox(height: 10), ...['447', '442', '440'].map((amount) => Container(margin: const EdgeInsets.only(bottom: 9), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppColors.card, border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(15)), child: Row(children: [Text('$amount ريال يمني', style: const TextStyle(color: AppColors.green, fontSize: 14, fontWeight: FontWeight.bold)), const Spacer(), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [const Text('تحويل مشترك', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)), Text('(05:17) 09/09/2026', style: TextStyle(color: AppColors.text2, fontSize: 10))]), const SizedBox(width: 10), const CircleAvatar(radius: 20, backgroundColor: AppColors.card3, child: Icon(Icons.swap_vert_rounded, color: AppColors.text2, size: 20))])))]);
+  Widget _buildCategoryCard(dynamic category, int index) {
+    final image = category['image']?.toString() ?? '';
+    final title = category['name']?.toString() ?? 'قسم';
+    final color = AppColors.iconColorFor(index);
+    return InkWell(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => CategoryScreen(categoryId: category['id'], categoryName: title),
+      )),
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withOpacity(.12),
+                border: Border.all(color: color.withOpacity(.35)),
+              ),
+              child: image.isEmpty
+                  ? Icon(Icons.folder_rounded, color: color, size: 21)
+                  : ClipOval(
+                      child: Image.network(
+                        'https://njaz.net/$image',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(Icons.folder_rounded, color: color, size: 21),
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.text, fontSize: 11, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactions() {
+    if (_ordersLoading) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 28),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+    if (_ordersError != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 22),
+        child: Center(child: Text(_ordersError!, style: const TextStyle(color: AppColors.red))),
+      );
+    }
+    if (_orders.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 22),
+        child: Center(child: Text('لا توجد طلبات بعد', style: TextStyle(color: AppColors.text2))),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const SizedBox(height: 22),
+        const Text('الطلبات', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        ..._orders.take(5).map(_buildOrderCard),
+      ],
+    );
+  }
+
+  Widget _buildOrderCard(dynamic order) {
+    final status = order['status']?.toString() ?? '';
+    final statusColor = status == 'completed' ? AppColors.green : status == 'rejected' || status == 'failed' ? AppColors.red : AppColors.gold;
+    final title = order['service_name']?.toString() ?? 'طلب خدمة';
+    final amount = order['total_price']?.toString() ?? '0';
+    final date = order['created_at']?.toString() ?? order['date']?.toString() ?? '';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: AppColors.card, border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(15)),
+      child: Row(
+        children: [
+          Text('$amount ريال يمني', style: TextStyle(color: statusColor, fontSize: 13, fontWeight: FontWeight.bold)),
+          const Spacer(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(date.isEmpty ? _orderStatusLabel(status) : date, style: TextStyle(color: AppColors.text2, fontSize: 10)),
+            ],
+          ),
+          const SizedBox(width: 10),
+          CircleAvatar(radius: 20, backgroundColor: AppColors.card3, child: Icon(Icons.receipt_long_rounded, color: statusColor, size: 20)),
+        ],
+      ),
+    );
+  }
+
+  String _orderStatusLabel(String status) {
+    switch (status) {
+      case 'completed':
+        return 'مكتمل';
+      case 'pending':
+        return 'قيد الانتظار';
+      case 'processing':
+        return 'قيد التنفيذ';
+      case 'rejected':
+        return 'مرفوض';
+      case 'failed':
+        return 'فشل';
+      default:
+        return status.isEmpty ? 'طلب جديد' : status;
+    }
+  }
 }
