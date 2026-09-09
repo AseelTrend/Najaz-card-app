@@ -172,7 +172,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -214,7 +214,6 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
             style: const TextStyle(color: AppColors.text2, fontSize: 10, fontWeight: FontWeight.w600),
           ),
         ],
-        ),
       ),
     );
   }
