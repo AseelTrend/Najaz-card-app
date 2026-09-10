@@ -40,9 +40,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
           cats.map((category) => ApiService.getServices(categoryId: category['id'] as int)),
         );
         services = servicesByCategory.expand((items) => items).toList();
-        ),
-      ),
-    );
+      } else {
         services = await ApiService.getServices(categoryId: widget.categoryId);
       }
       if (!mounted) return;
@@ -115,7 +113,6 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
           ],
         ],
       ),
-    );
     );
   }
 
