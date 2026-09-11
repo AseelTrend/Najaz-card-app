@@ -11,7 +11,7 @@ import 'notifications_screen.dart';
 import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'support_chat_screen.dart';
-import 'wallet_screen.dart';
+import 'topup_screen.dart';
 
 class _BannerData {
   final String title;
@@ -33,6 +33,14 @@ class _BannerData {
     this.accentColor = AppColors.cyan,
     this.imageUrl = '',
   });
+}
+
+class _NavItemData {
+  final int index;
+  final String label;
+  final IconData activeIcon;
+  final IconData icon;
+  const _NavItemData(this.index, this.label, this.activeIcon, this.icon);
 }
 
 class HomeScreen extends StatefulWidget {
@@ -187,17 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openWallet() async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WalletScreen()));
-    try {
-      final wallet = await ApiService.getWallet();
-      final current = await StorageService.getUser();
-      await StorageService.saveUser({
-        'name': current['name'],
-        'uid': current['uid'],
-        'balance': (wallet['balance'] ?? current['balance']).toString(),
-      });
-    } catch (_) {}
+  Future<void> _openTopup({int initialTab = 0}) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => TopupScreen(initialTab: initialTab)));
     _loadUser();
   }
 
@@ -208,26 +207,75 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: _tabIndex == 0 ? _buildHome() : _buildOtherTab(),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          border: Border(top: BorderSide(color: AppColors.border)),
-        ),
-        child: NavigationBar(
-          selectedIndex: _tabIndex,
-          onDestinationSelected: (i) {
-            if (i == 2) {
-              _openWallet();
-              return;
-            }
-            setState(() => _tabIndex = i);
-          },
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_rounded), label: 'الرئيسية'),
-            NavigationDestination(icon: Icon(Icons.grid_view_rounded), label: 'الخدمات'),
-            NavigationDestination(icon: Icon(Icons.add_card_rounded), label: 'شحن الرصيد'),
-            NavigationDestination(icon: Icon(Icons.receipt_long_rounded), label: 'التقارير'),
-            NavigationDestination(icon: Icon(Icons.person_outline_rounded), label: 'الملف'),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  // [UI PORT] شريط تنقل سفلي بزر "شحن" دائري عائم في المنتصف — مطابق
+  // لتصميم المشروع المرجعي (BottomNav.tsx) بدل NavigationBar الافتراضي.
+  Widget _buildBottomNav() {
+    final items = <_NavItemData>[
+      _NavItemData(0, 'الرئيسية', Icons.home_rounded, Icons.home_outlined),
+      _NavItemData(1, 'الخدمات', Icons.grid_view_rounded, Icons.grid_view_outlined),
+      _NavItemData(3, 'طلباتي', Icons.shopping_bag_rounded, Icons.shopping_bag_outlined),
+      _NavItemData(4, 'حسابي', Icons.person_rounded, Icons.person_outline_rounded),
+    ];
+    return Container(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 8, top: 8, right: 6, left: 6),
+      decoration: BoxDecoration(
+        color: AppColors.bg2.withOpacity(0.97),
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _navTabButton(items[0]),
+          _navTabButton(items[1]),
+          // الزر الدائري العائم لشحن الرصيد في المنتصف
+          GestureDetector(
+            onTap: () => _openTopup(initialTab: 0),
+            child: Transform.translate(
+              offset: const Offset(0, -22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.balanceGradient,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.bg2, width: 4),
+                      boxShadow: [BoxShadow(color: AppColors.accentPurple.withOpacity(0.45), blurRadius: 16, offset: const Offset(0, 6))],
+                    ),
+                    child: const Icon(Icons.add_circle_rounded, color: Colors.white, size: 26),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text('شحن', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ),
+          _navTabButton(items[2]),
+          _navTabButton(items[3]),
+        ],
+      ),
+    );
+  }
+
+  Widget _navTabButton(_NavItemData item) {
+    final isActive = _tabIndex == item.index;
+    return InkWell(
+      onTap: () => setState(() => _tabIndex = item.index),
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(isActive ? item.activeIcon : item.icon, size: 21, color: isActive ? AppColors.primary : AppColors.text2),
+            const SizedBox(height: 3),
+            Text(item.label, style: TextStyle(fontSize: 10, fontWeight: isActive ? FontWeight.bold : FontWeight.w600, color: isActive ? AppColors.text : AppColors.text3)),
           ],
         ),
       ),
@@ -336,13 +384,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // [UI PORT] بطاقة الرصيد — مطابقة لتصميم BalanceHero.tsx المرجعي:
+  // شارة "حساب موثق"، زر إظهار/إخفاء فعلي، وصف 4 أزرار إجراءات سريعة.
   Widget _buildBalanceHero() {
     return Container(
       margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: AppColors.balanceGradient,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withOpacity(0.15)),
         boxShadow: [
           BoxShadow(color: AppColors.accentPurple.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 10)),
         ],
@@ -352,29 +403,82 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              const Expanded(child: Text('حساب', style: TextStyle(color: Color(0xFFE9D7FF), fontSize: 11))),
-              Row(children: [Container(width: 28, height: 28, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)), child: const Center(child: Text('ن', style: TextStyle(fontWeight: FontWeight.bold)))), const SizedBox(width: 6), const Text('نجاز', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
-            ],
-          ),
-          const SizedBox(height: 22),
-          Row(
-            children: [
-              Text(_hideBalance ? '•••••' : _balance, style: const TextStyle(color: Colors.white, fontSize: 27, fontWeight: FontWeight.bold, letterSpacing: 2)),
-              const SizedBox(width: 10),
+              const Text('الرصيد المتاح بالمحفظة', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500)),
+              const SizedBox(width: 4),
               GestureDetector(
                 onTap: () => setState(() => _hideBalance = !_hideBalance),
-                child: Icon(
-                  Icons.visibility_off_outlined,
-                  color: Colors.white70,
-                  size: 20,
-                ),
+                child: Icon(_hideBalance ? Icons.visibility_off_rounded : Icons.visibility_rounded, color: Colors.white70, size: 16),
               ),
               const Spacer(),
-              const SizedBox.shrink(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: Colors.black.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withOpacity(0.1))),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.verified_user_rounded, color: AppColors.green, size: 13),
+                  SizedBox(width: 5),
+                  Text('حساب موثق', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                ]),
+              ),
             ],
           ),
-          const Align(alignment: Alignment.centerRight, child: Text('ريال يمني', style: TextStyle(color: Colors.white70, fontSize: 12))),
+          const SizedBox(height: 12),
+          _hideBalance
+              ? const Text('••••••••', style: TextStyle(color: Colors.white70, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 3))
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text('$_balance', style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                    const SizedBox(width: 6),
+                    const Text('ريال يمني', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _balanceActionBtn('شحن المحفظة', Icons.add_rounded, filled: true, onTap: () => _openTopup(initialTab: 0))),
+              const SizedBox(width: 8),
+              Expanded(child: _balanceActionBtn('إيداع USDT', Icons.bolt_rounded, iconColor: AppColors.cyan, onTap: () => _openTopup(initialTab: 1))),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _balanceActionBtn('كود بطاقة', Icons.credit_card_rounded, iconColor: AppColors.gold, onTap: () => _openTopup(initialTab: 2))),
+              const SizedBox(width: 8),
+              Expanded(child: _balanceActionBtn('سجل الطلبات', Icons.north_east_rounded, onTap: () => setState(() => _tabIndex = 3))),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _balanceActionBtn(String label, IconData icon, {bool filled = false, Color? iconColor, required VoidCallback onTap}) {
+    return Material(
+      color: filled ? Colors.white : Colors.white.withOpacity(0.15),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          decoration: filled ? null : BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(0.15))),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 15, color: filled ? AppColors.primaryDark : (iconColor ?? Colors.white)),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: filled ? AppColors.primaryDark : Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

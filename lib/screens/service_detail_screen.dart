@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
+import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
+import 'topup_screen.dart';
 
 class ServiceDetailScreen extends StatefulWidget {
   final int serviceId;
@@ -21,6 +24,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   bool _hasCoupons = false;
   bool _placing = false;
   String? _error;
+  double _userBalance = 0;
 
   @override
   void initState() {
@@ -35,6 +39,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       try {
         hasCoupons = await ApiService.serviceHasCoupons(widget.serviceId);
       } catch (_) {}
+      final user = await StorageService.getUser();
       for (final f in (service['fields'] as List<dynamic>)) {
         _fieldControllers[f['field_name']] = TextEditingController();
       }
@@ -43,6 +48,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         _hasCoupons = hasCoupons;
         _quantity = _minQuantity;
         _quantityCtrl.text = '$_quantity';
+        _userBalance = double.tryParse('${user['balance'] ?? 0}') ?? 0;
       });
     } catch (e) {
       setState(() => _error = 'تعذر تحميل الخدمة');
@@ -65,6 +71,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   int get _maxQuantity => int.tryParse('${_service?['max_qty'] ?? 9999}') ?? 9999;
   double get _unitPrice => double.tryParse('${_service?['price'] ?? 0}') ?? 0;
   double get _totalPrice => _unitPrice * _quantity;
+  bool get _hasEnoughBalance => _userBalance >= _totalPrice;
+
+  Future<void> _goToTopup() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TopupScreen(initialTab: 0)));
+    final user = await StorageService.getUser();
+    if (mounted) setState(() => _userBalance = double.tryParse('${user['balance'] ?? 0}') ?? 0);
+  }
 
   void _setQuantity(int value) {
     final clamped = value.clamp(_minQuantity, _maxQuantity).toInt();
@@ -91,6 +104,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         setState(() => _error = 'الحقل "${f['field_label']}" مطلوب');
         return;
       }
+    }
+
+    if (!_hasEnoughBalance) {
+      setState(() => _error = 'رصيدك الحالي غير كافٍ لإتمام هذا الطلب. يرجى شحن الرصيد أولاً.');
+      return;
     }
 
     setState(() {
@@ -121,6 +139,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   }
 
   void _showSuccessDialog(Map<String, dynamic> result) {
+    bool codeCopied = false;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -144,8 +163,26 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               Text('رصيدك الجديد: \$${result['new_balance']}', style: const TextStyle(color: AppColors.text2)),
             if (result['delivered_code'] != null && result['delivered_code'].toString().isNotEmpty) ...[
               const SizedBox(height: 8),
-              SelectableText('الكود: ${result['delivered_code']}',
-                  style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(color: AppColors.card2, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.primary.withOpacity(.3))),
+                child: Row(children: [
+                  Expanded(child: SelectableText(result['delivered_code'].toString(), style: const TextStyle(color: AppColors.cyan, fontWeight: FontWeight.bold, fontFamily: 'monospace'))),
+                  StatefulBuilder(
+                    builder: (context, setCopyState) {
+                      return TextButton.icon(
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: result['delivered_code'].toString()));
+                          setCopyState(() => codeCopied = true);
+                        },
+                        icon: Icon(codeCopied ? Icons.check_rounded : Icons.copy_rounded, size: 14),
+                        label: Text(codeCopied ? 'تم النسخ' : 'نسخ', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        style: TextButton.styleFrom(foregroundColor: AppColors.primary, backgroundColor: AppColors.primary.withOpacity(.12), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
+                      );
+                    },
+                  ),
+                ]),
+              ),
             ],
           ],
         ),
@@ -257,16 +294,42 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                           ),
-                          child: Row(
-                            children: [
-                              const Text('الإجمالي', style: TextStyle(color: AppColors.text2, fontSize: 13)),
-                              const Spacer(),
-                              Text(
-                                '\$${_totalPrice.toStringAsFixed(2)}',
-                                style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold),
+                          child: Column(children: [
+                            Row(
+                              children: [
+                                const Text('الإجمالي', style: TextStyle(color: AppColors.text2, fontSize: 13)),
+                                const Spacer(),
+                                Text(
+                                  '\$${_totalPrice.toStringAsFixed(2)}',
+                                  style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Row(
+                                children: [
+                                  const Text('رصيدك في المحفظة', style: TextStyle(color: AppColors.text2, fontSize: 11.5)),
+                                  const Spacer(),
+                                  Text('\$${_userBalance.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            if (!_hasEnoughBalance)
+                              Container(
+                                margin: const EdgeInsets.only(top: 10),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                decoration: BoxDecoration(color: AppColors.red.withOpacity(.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.red.withOpacity(.25))),
+                                child: Row(children: [
+                                  const Expanded(child: Text('الرصيد غير كافٍ لإتمام الطلب', style: TextStyle(color: AppColors.red, fontSize: 11))),
+                                  TextButton(
+                                    onPressed: _goToTopup,
+                                    style: TextButton.styleFrom(backgroundColor: AppColors.red, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                                    child: const Text('شحن الآن', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  ),
+                                ]),
+                              ),
+                          ]),
                         ),
 
                         ...(_service!['fields'] as List<dynamic>).map((f) => Padding(
@@ -317,17 +380,18 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         const SizedBox(height: 20),
                         Container(
                           decoration: BoxDecoration(
-                            gradient: AppColors.balanceGradient,
+                            gradient: _hasEnoughBalance ? AppColors.balanceGradient : null,
+                            color: _hasEnoughBalance ? null : AppColors.card2,
                             borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(color: AppColors.accentPurple.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6)),
-                            ],
+                            boxShadow: _hasEnoughBalance
+                                ? [BoxShadow(color: AppColors.accentPurple.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6))]
+                                : null,
                           ),
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(14),
-                              onTap: _placing ? null : _placeOrder,
+                              onTap: (_placing || !_hasEnoughBalance) ? null : _placeOrder,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 child: Center(
@@ -335,8 +399,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                                       ? const SizedBox(
                                           height: 20, width: 20,
                                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                      : const Text('تأكيد الطلب',
-                                          style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
+                                      : Text(_hasEnoughBalance ? 'تأكيد الطلب' : 'الرصيد غير كافٍ',
+                                          style: TextStyle(fontSize: 16, color: _hasEnoughBalance ? Colors.white : AppColors.text3, fontWeight: FontWeight.w600)),
                                 ),
                               ),
                             ),
