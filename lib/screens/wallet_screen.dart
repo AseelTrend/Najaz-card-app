@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/format.dart';
 import 'topup_screen.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -153,7 +154,7 @@ class _WalletScreenState extends State<WalletScreen> {
         children: [
           const Text('رصيدي الحالي', style: TextStyle(color: Colors.white70, fontSize: 12)),
           const SizedBox(height: 6),
-          Text('${_balance.toStringAsFixed(2)} $_currSymbol',
+          Text('${formatMoney(_balance)} $_currSymbol',
               style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           Row(
@@ -208,7 +209,7 @@ class _WalletScreenState extends State<WalletScreen> {
             ],
           ),
           const SizedBox(height: 6),
-          Text('${positive ? '+' : '-'}${value.toStringAsFixed(2)}',
+          Text('${positive ? '+' : '-'}${formatMoney(value)}',
               style: TextStyle(color: color, fontSize: 17, fontWeight: FontWeight.bold)),
         ],
       ),
@@ -272,7 +273,7 @@ class _WalletScreenState extends State<WalletScreen> {
               ],
             ),
           ),
-          Text('${positive ? '+' : '-'}${amount.toStringAsFixed(2)}',
+          Text('${positive ? '+' : '-'}${formatMoney(amount)}',
               style: TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold)),
         ],
       ),

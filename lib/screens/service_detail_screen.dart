@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/format.dart';
 import 'topup_screen.dart';
 
 class ServiceDetailScreen extends StatefulWidget {
@@ -300,7 +301,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                                 const Text('الإجمالي', style: TextStyle(color: AppColors.text2, fontSize: 13)),
                                 const Spacer(),
                                 Text(
-                                  '\$${_totalPrice.toStringAsFixed(2)}',
+                                  '\$${formatMoney(_totalPrice)}',
                                   style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -311,7 +312,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                                 children: [
                                   const Text('رصيدك في المحفظة', style: TextStyle(color: AppColors.text2, fontSize: 11.5)),
                                   const Spacer(),
-                                  Text('\$${_userBalance.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                                  Text('\$${formatMoney(_userBalance)}', style: const TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ),
