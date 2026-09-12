@@ -428,9 +428,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text('$_balance', style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                    const SizedBox(width: 6),
-                    const Text('ريال يمني', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text('\$$_balance', style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                   ],
                 ),
           const SizedBox(height: 20),
@@ -746,7 +744,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(color: AppColors.card, border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(15)),
       child: Row(
         children: [
-          Text('$amount ريال يمني', style: TextStyle(color: statusColor, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text('\$$amount', style: TextStyle(color: statusColor, fontSize: 13, fontWeight: FontWeight.bold)),
           const Spacer(),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
