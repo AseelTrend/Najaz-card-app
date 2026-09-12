@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
+import 'settings_screen.dart';
 import 'topup_screen.dart';
 import 'wallet_screen.dart';
 
@@ -20,13 +21,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> _profile = {};
-  List<dynamic> _devices = [];
   bool _loading = true;
   bool _refreshing = false;
   bool _darkMode = true;
   bool _pushEnabled = true;
   String _language = 'ar';
-  String _timezone = '3';
   String? _error;
 
   @override
@@ -45,21 +44,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _error = null;
     });
     try {
-      final values = await Future.wait([ApiService.getProfile(), ApiService.getDevices()]);
+      final profile = await ApiService.getProfile();
       final darkMode = await StorageService.getSetting('dark_mode');
       final pushEnabled = await StorageService.getSetting('push_enabled');
       final language = await StorageService.getSetting('language');
-      final timezone = await StorageService.getSetting('timezone');
       if (!mounted) return;
       setState(() {
-        _profile = values[0] as Map<String, dynamic>;
-        _devices = values[1] as List<dynamic>;
+        _profile = profile;
         _darkMode = darkMode != 'false';
         _pushEnabled = pushEnabled != 'false';
         _language = language ?? 'ar';
-        _timezone = timezone ?? '3';
       });
-      if (manual && mounted) _showMessage('تم تحديث بيانات الحساب والأجهزة بنجاح', AppColors.green);
+      if (manual && mounted) _showMessage('تم تحديث بيانات الحساب بنجاح', AppColors.green);
     } catch (_) {
       final user = await StorageService.getUser();
       if (!mounted) return;
@@ -125,20 +121,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveSetting(String key, String value, String successMessage) async {
     await StorageService.saveSetting(key, value);
     if (mounted) _showMessage(successMessage, AppColors.primary);
-  }
-
-  Future<void> _toggleDevice(dynamic device) async {
-    final blocked = device['status']?.toString() == 'blocked';
-    try {
-      await ApiService.setDeviceBlocked(deviceId: (device['id'] as num).toInt(), blocked: !blocked);
-      final name = device['device_name']?.toString() ?? '';
-      if (mounted) {
-        setState(() => device['status'] = blocked ? 'approved' : 'blocked');
-        _showMessage(blocked ? 'تم إلغاء حظر جهاز $name' : 'تم حظر جهاز $name', blocked ? AppColors.green : AppColors.gold);
-      }
-    } on ApiException catch (e) {
-      if (mounted) _showMessage(e.message, AppColors.red);
-    }
   }
 
   void _showMessage(String message, Color color) {
@@ -224,9 +206,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 18),
                   _sectionTitle('إعدادات التطبيق والتفضيلات'),
                   _settingsCard(),
-                  const SizedBox(height: 18),
-                  _devicesSectionHeader(),
-                  _devicesCard(),
+                  const SizedBox(height: 10),
+                  _settingsNavRow(),
                   const SizedBox(height: 18),
                   _sectionTitle('المعلومات والدعم الفني'),
                   _infoCard(),
@@ -404,31 +385,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
           ),
         ),
-        _divider(),
-        _settingRow(
-          icon: Icons.schedule_rounded,
-          iconColor: AppColors.gold,
-          title: 'المنطقة الزمنية',
-          subtitle: 'توقيت تسجيل الحركات وسجل الطلبات',
-          trailing: DropdownButton<String>(
-            value: _timezone,
-            underline: const SizedBox.shrink(),
-            dropdownColor: AppColors.card2,
-            style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold),
-            items: const [
-              DropdownMenuItem(value: '3', child: Text('UTC+3 اليمن')),
-              DropdownMenuItem(value: '2', child: Text('UTC+2 مصر/الشام')),
-              DropdownMenuItem(value: '4', child: Text('UTC+4 الإمارات')),
-              DropdownMenuItem(value: '0', child: Text('UTC+0 غرينتش')),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() => _timezone = value);
-              _saveSetting('timezone', value, 'تم حفظ المنطقة الزمنية');
-            },
-          ),
-        ),
       ]),
+    );
+  }
+
+  // [UI PORT] سطر تنقّل إلى شاشة الإعدادات المستقلة (المنطقة الزمنية +
+  // الأجهزة المصرّحة بالدخول) بدل عرضها هنا مباشرة.
+  Widget _settingsNavRow() {
+    return Container(
+      decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(children: [
+            Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.gold.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.settings_rounded, color: AppColors.gold, size: 18)),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('الإعدادات', style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
+                SizedBox(height: 2),
+                Text('المنطقة الزمنية والأجهزة المصرّحة بالدخول', style: TextStyle(color: AppColors.text2, fontSize: 10.5)),
+              ]),
+            ),
+            const Icon(Icons.chevron_left_rounded, color: AppColors.text2, size: 20),
+          ]),
+        ),
+      ),
     );
   }
 
@@ -451,78 +435,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── 3. قسم الأجهزة المصرّحة ───────────────────────────────────────────────
-  Widget _devicesSectionHeader() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        _sectionTitle('الأجهزة المصرّحة والدخول', padded: false),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
-          child: Text('${_devices.length} أجهزة مسجلة', style: const TextStyle(color: AppColors.text2, fontSize: 10)),
-        ),
-      ]),
-    );
-  }
-
-  Widget _devicesCard() {
-    if (_devices.isEmpty) return _messageBox('لا توجد أجهزة مسجلة', AppColors.text2);
-    return Container(
-      decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        children: _devices.map((device) {
-          final blocked = device['status']?.toString() == 'blocked';
-          final first = device['is_first_device'] == 1 || device['is_first_device'] == '1' || device['is_first_device'] == true;
-          final type = device['device_type']?.toString() ?? '';
-          final icon = type == 'mobile' ? Icons.smartphone_rounded : (type == 'tablet' ? Icons.tablet_mac_rounded : Icons.desktop_windows_rounded);
-          final iconBg = blocked ? AppColors.red : (first ? AppColors.green : AppColors.primary);
-          final deviceName = device['device_name']?.toString();
-          final subtitleParts = [
-            (device['browser']?.toString().isNotEmpty == true ? device['browser'].toString() : device['os']?.toString()) ?? 'تطبيق نجاز',
-            'آخر ظهور: ${device['last_seen']?.toString().isNotEmpty == true ? device['last_seen'] : 'غير محدد'}',
-          ];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: blocked ? AppColors.red.withOpacity(.08) : AppColors.card.withOpacity(.6),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: blocked ? AppColors.red.withOpacity(.25) : AppColors.border),
-            ),
-            child: Row(children: [
-              Container(width: 40, height: 40, alignment: Alignment.center, decoration: BoxDecoration(color: iconBg.withOpacity(.18), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: iconBg, size: 19)),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                    Text(deviceName?.isNotEmpty == true ? deviceName! : 'جهاز ${type.isEmpty ? 'مجهول' : type}', style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold)),
-                    if (first)
-                      Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: AppColors.green.withOpacity(.18), borderRadius: BorderRadius.circular(20)), child: const Text('الجهاز الأساسي', style: TextStyle(color: AppColors.green, fontSize: 9, fontWeight: FontWeight.bold))),
-                    if (blocked)
-                      Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: AppColors.red.withOpacity(.18), borderRadius: BorderRadius.circular(20)), child: const Text('محظور', style: TextStyle(color: AppColors.red, fontSize: 9, fontWeight: FontWeight.bold))),
-                  ]),
-                  const SizedBox(height: 3),
-                  Text(subtitleParts.join('  •  '), style: const TextStyle(color: AppColors.text2, fontSize: 9.5), maxLines: 1, overflow: TextOverflow.ellipsis),
-                ]),
-              ),
-              first
-                  ? const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.verified_user_rounded, color: AppColors.green, size: 18))
-                  : TextButton.icon(
-                      onPressed: () => _toggleDevice(device),
-                      icon: Icon(blocked ? Icons.lock_open_rounded : Icons.block_rounded, size: 14, color: blocked ? AppColors.green : AppColors.red),
-                      label: Text(blocked ? 'فك الحظر' : 'حظر', style: TextStyle(color: blocked ? AppColors.green : AppColors.red, fontSize: 11, fontWeight: FontWeight.bold)),
-                      style: TextButton.styleFrom(backgroundColor: (blocked ? AppColors.green : AppColors.red).withOpacity(.12), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                    ),
-            ]),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  // ── 4. قسم المعلومات والدعم الفني ─────────────────────────────────────────
+  // ── 3. قسم المعلومات والدعم الفني ─────────────────────────────────────────
   Widget _infoCard() {
     return Container(
       decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
