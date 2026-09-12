@@ -541,6 +541,53 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBannerSlide(_BannerData banner) {
+    // [FIX] عندما تكون هناك صورة إعلانية حقيقية من السيرفر، كانت تُعرض
+    // بحجم مربع صغير 108×108 مع BoxFit.cover، فتُقص أغلب التصميم (خصوصاً
+    // إن كانت الصورة الأصلية مستطيلة عريضة) — تمامًا مثل صورة "بريميوم"
+    // بالمرفق. الآن تُعرض الصورة كاملة العرض على مساحة الشريط بالكامل،
+    // بنفس الطريقة الظاهرة بالموقع والمشروع المرجعي. البطاقات الاحتياطية
+    // (بلا صورة) لم تتغير إطلاقاً.
+    if (banner.imageUrl.isNotEmpty) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          CachedNetworkImage(
+            imageUrl: banner.imageUrl,
+            fit: BoxFit.cover,
+            errorWidget: (_, __, ___) => _bannerFallbackCard(banner),
+          ),
+          if (banner.title.isNotEmpty)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0xB3000000), Colors.transparent],
+                  stops: [0.0, 0.55],
+                ),
+              ),
+            ),
+          if (banner.title.isNotEmpty)
+            Positioned(
+              right: 16,
+              left: 16,
+              bottom: 14,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(banner.title, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor, fontSize: 15, fontWeight: FontWeight.bold)),
+                  if (banner.subtitle.isNotEmpty)
+                    Text(banner.subtitle, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor.withOpacity(.85), fontSize: 11)),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+    return _bannerFallbackCard(banner);
+  }
+
+  Widget _bannerFallbackCard(_BannerData banner) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 18, 22),
       decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: banner.colors)),
@@ -560,10 +607,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 16),
-          if (banner.imageUrl.isNotEmpty)
-            ClipRRect(borderRadius: BorderRadius.circular(16), child: CachedNetworkImage(imageUrl: banner.imageUrl, width: 108, height: 108, fit: BoxFit.cover, errorWidget: (_, __, ___) => _bannerIcon(banner)))
-          else
-            _bannerIcon(banner),
+          _bannerIcon(banner),
         ],
       ),
     );
