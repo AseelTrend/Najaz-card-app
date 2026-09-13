@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../widgets/category_browser.dart';
 
 /// شاشة قابلة لإعادة الاستخدام لأي مستوى داخل شجرة الأقسام —
@@ -11,13 +12,16 @@ class CategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // [FIX] كانت الشاشة تستخدم ألوان داكنة ثابتة (Color(0xFF090D1A) وأبيض)
+    // بدل AppColors، فتبقى داكنة دائماً بغضّ النظر عن الوضع الليلي/النهاري
+    // المُفعّل بباقي التطبيق. الآن تتبع نفس نظام الألوان الفعلي.
     return Scaffold(
-      backgroundColor: const Color(0xFF090D1A),
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF090D1A),
+        backgroundColor: AppColors.bg,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(categoryName, style: const TextStyle(color: Colors.white, fontSize: 16)),
+        iconTheme: IconThemeData(color: AppColors.text),
+        title: Text(categoryName, style: TextStyle(color: AppColors.text, fontSize: 16)),
       ),
       body: SafeArea(child: CategoryBrowser(categoryId: categoryId)),
     );
