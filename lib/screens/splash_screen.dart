@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
               child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 46),
             ),
             const SizedBox(height: 20),
-            const Text('نجاز كارد',
+             Text('نجاز كارد',
                 style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 28),
             const CircularProgressIndicator(color: AppColors.primary),

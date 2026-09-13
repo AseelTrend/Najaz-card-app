@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_tabIndex == 1) return const CategoryBrowser(categoryId: null);
     if (_tabIndex == 3) return const OrdersScreen();
     if (_tabIndex == 4) return ProfileScreen(onLogout: _logout);
-    return const Center(child: Text('التحويلات', style: TextStyle(color: AppColors.text)));
+    return  Center(child: Text('التحويلات', style: TextStyle(color: AppColors.text)));
   }
 
   Widget _buildHeader() {
@@ -317,8 +317,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text('صباح الخير', style: TextStyle(color: AppColors.text, fontSize: 20, fontWeight: FontWeight.bold)),
-              Text(_userName.isEmpty ? 'أصيل' : _userName, style: const TextStyle(color: AppColors.text2, fontSize: 14)),
+               Text('صباح الخير', style: TextStyle(color: AppColors.text, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(_userName.isEmpty ? 'أصيل' : _userName, style:  TextStyle(color: AppColors.text2, fontSize: 14)),
             ],
           ),
         ),
@@ -376,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(color: const Color(0xFF291529), border: Border.all(color: const Color(0xFF5D2E68)), borderRadius: BorderRadius.circular(14)),
       child: Row(
         children: [
-          IconButton(onPressed: () => setState(() => _showSyncAlert = false), icon: const Icon(Icons.close, size: 15, color: AppColors.text2), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 24)),
+          IconButton(onPressed: () => setState(() => _showSyncAlert = false), icon:  Icon(Icons.close, size: 15, color: AppColors.text2), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 24)),
           const Expanded(child: Text('اضغط هنا لمزامنة الاقتراحات والمفضلة بين أجهزتك', textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Color(0xFFD99BFF), fontSize: 11))),
           const Icon(Icons.sync_rounded, color: AppColors.primary, size: 18),
         ],
@@ -627,7 +627,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     if (_categories.isEmpty) {
-      return const Padding(
+      return  Padding(
         padding: EdgeInsets.only(top: 22),
         child: Center(child: Text('لا توجد أقسام متاحة حالياً', style: TextStyle(color: AppColors.text2))),
       );
@@ -715,7 +715,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     if (_orders.isEmpty) {
-      return const Padding(
+      return  Padding(
         padding: EdgeInsets.only(top: 22),
         child: Center(child: Text('لا توجد طلبات بعد', style: TextStyle(color: AppColors.text2))),
       );
@@ -725,7 +725,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         const SizedBox(height: 22),
-        const Text('الطلبات', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
+         Text('الطلبات', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         ..._orders.take(5).map(_buildOrderCard),
       ],
@@ -749,7 +749,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style:  TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)),
               Text(date.isEmpty ? _orderStatusLabel(status) : date, style: TextStyle(color: AppColors.text2, fontSize: 10)),
             ],
           ),

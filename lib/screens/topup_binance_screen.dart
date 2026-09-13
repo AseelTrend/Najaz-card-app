@@ -104,12 +104,12 @@ class _TopupBinanceScreenState extends State<TopupBinanceScreen> {
           builder: (_) => AlertDialog(
             backgroundColor: AppColors.card,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(children: [
+            title:  Row(children: [
               Icon(Icons.check_circle_rounded, color: AppColors.green),
               SizedBox(width: 8),
               Text('تم الشحن', style: TextStyle(color: AppColors.text)),
             ]),
-            content: const Text('تم التحقق من العملية وإضافة الرصيد بنجاح', style: TextStyle(color: AppColors.text2)),
+            content:  Text('تم التحقق من العملية وإضافة الرصيد بنجاح', style: TextStyle(color: AppColors.text2)),
             actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسناً', style: TextStyle(color: AppColors.primary)))],
           ),
         );
@@ -129,7 +129,7 @@ class _TopupBinanceScreenState extends State<TopupBinanceScreen> {
   void _copy(String value) {
     Clipboard.setData(ClipboardData(text: value));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم النسخ'), duration: Duration(seconds: 1), backgroundColor: AppColors.card2),
+       SnackBar(content: Text('تم النسخ'), duration: Duration(seconds: 1), backgroundColor: AppColors.card2),
     );
   }
 
@@ -140,8 +140,8 @@ class _TopupBinanceScreenState extends State<TopupBinanceScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('مباشر Binance', style: TextStyle(color: AppColors.text)),
-        iconTheme: const IconThemeData(color: AppColors.text),
+        title:  Text('مباشر Binance', style: TextStyle(color: AppColors.text)),
+        iconTheme:  IconThemeData(color: AppColors.text),
       ),
       body: SafeArea(
         child: ListView(
@@ -167,23 +167,23 @@ class _TopupBinanceScreenState extends State<TopupBinanceScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(children: [
+             Row(children: [
               Icon(Icons.currency_bitcoin_rounded, color: Color(0xFFF6C11A)),
               SizedBox(width: 8),
               Text('إيداع USDT عبر Binance Pay', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
             ]),
             const SizedBox(height: 8),
-            Text('الحد الأدنى: ${minimum.toStringAsFixed(2)}\$', style: const TextStyle(color: AppColors.text2, fontSize: 12)),
+            Text('الحد الأدنى: ${minimum.toStringAsFixed(2)}\$', style:  TextStyle(color: AppColors.text2, fontSize: 12)),
           ],
         ),
       ),
       const SizedBox(height: 16),
-      const Text('المبلغ (USDT)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+       Text('المبلغ (USDT)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       TextField(
         controller: _amountCtrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        style: const TextStyle(color: AppColors.text),
+        style:  TextStyle(color: AppColors.text),
         decoration: InputDecoration(
           hintText: '0.00',
           filled: true,
@@ -220,24 +220,24 @@ class _TopupBinanceScreenState extends State<TopupBinanceScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('أرسل عبر Binance Pay إلى', style: TextStyle(color: AppColors.text2, fontSize: 12)),
+             Text('أرسل عبر Binance Pay إلى', style: TextStyle(color: AppColors.text2, fontSize: 12)),
             const SizedBox(height: 4),
             Row(
               children: [
                 Expanded(
                   child: Text(receiver.isEmpty ? '—' : '$receiver${receiverType.isNotEmpty ? ' ($receiverType)' : ''}',
-                      style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
+                      style:  TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
                 ),
                 if (receiver.isNotEmpty)
                   IconButton(icon: const Icon(Icons.copy_rounded, color: AppColors.primary, size: 18), onPressed: () => _copy(receiver)),
               ],
             ),
             Divider(color: AppColors.border, height: 24),
-            const Text('المبلغ المطلوب بالضبط', style: TextStyle(color: AppColors.text2, fontSize: 12)),
+             Text('المبلغ المطلوب بالضبط', style: TextStyle(color: AppColors.text2, fontSize: 12)),
             const SizedBox(height: 4),
             Row(
               children: [
-                Expanded(child: Text('$amount USDT', style: const TextStyle(color: AppColors.text, fontSize: 20, fontWeight: FontWeight.bold))),
+                Expanded(child: Text('$amount USDT', style:  TextStyle(color: AppColors.text, fontSize: 20, fontWeight: FontWeight.bold))),
                 IconButton(icon: const Icon(Icons.copy_rounded, color: AppColors.primary, size: 18), onPressed: () => _copy(amount)),
               ],
             ),
@@ -247,14 +247,14 @@ class _TopupBinanceScreenState extends State<TopupBinanceScreen> {
         ),
       ),
       const SizedBox(height: 20),
-      const Text('بعد إتمام التحويل، أدخل معرّف العملية (Transaction ID)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+       Text('بعد إتمام التحويل، أدخل معرّف العملية (Transaction ID)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       TextField(
         controller: _txCtrl,
-        style: const TextStyle(color: AppColors.text, fontSize: 12),
+        style:  TextStyle(color: AppColors.text, fontSize: 12),
         decoration: InputDecoration(
           hintText: 'Transaction ID',
-          hintStyle: const TextStyle(color: AppColors.text3),
+          hintStyle:  TextStyle(color: AppColors.text3),
           filled: true,
           fillColor: AppColors.card2,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),

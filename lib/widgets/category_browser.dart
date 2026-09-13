@@ -111,14 +111,14 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       child: TextField(
         controller: _searchController,
         onChanged: _onSearchChanged,
-        style: const TextStyle(color: AppColors.text, fontSize: 13),
+        style:  TextStyle(color: AppColors.text, fontSize: 13),
         decoration: InputDecoration(
           hintText: 'ابحث في آلاف الخدمات والباقات الفورية...',
-          hintStyle: const TextStyle(color: AppColors.text3, fontSize: 12),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.text3, size: 20),
+          hintStyle:  TextStyle(color: AppColors.text3, fontSize: 12),
+          prefixIcon:  Icon(Icons.search_rounded, color: AppColors.text3, size: 20),
           suffixIcon: _isSearching
               ? IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppColors.text2, size: 18),
+                  icon:  Icon(Icons.close_rounded, color: AppColors.text2, size: 18),
                   onPressed: () {
                     _searchController.clear();
                     _onSearchChanged('');
@@ -139,17 +139,17 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text('نتائج البحث عن: "$_searchQuery"', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold))),
-              Text(_searchLoading ? 'جاري البحث...' : '${_searchResults.length} نتيجة', style: const TextStyle(color: AppColors.text2, fontSize: 11)),
+              Expanded(child: Text('نتائج البحث عن: "$_searchQuery"', maxLines: 1, overflow: TextOverflow.ellipsis, style:  TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold))),
+              Text(_searchLoading ? 'جاري البحث...' : '${_searchResults.length} نتيجة', style:  TextStyle(color: AppColors.text2, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 14),
           if (_searchLoading)
-            const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
+             Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator(color: AppColors.primary)))
           else if (_searchResults.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 30),
-              child: Column(children: const [
+              child: Column(children:  [
                 Icon(Icons.search_off_rounded, color: AppColors.text3, size: 34),
                 SizedBox(height: 10),
                 Text('لم نتمكن من العثور على خدمات مطابقة', style: TextStyle(color: AppColors.text2, fontSize: 12, fontWeight: FontWeight.bold)),
@@ -203,7 +203,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
             children: [
               if (_categories.isNotEmpty) ...[
-                const Padding(
+                 Padding(
                   padding: EdgeInsets.only(bottom: 10),
                   child: Text('الأقسام الفرعية', style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
@@ -223,7 +223,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
               if (_services.isNotEmpty) ...[
                 Padding(
                   padding: EdgeInsets.only(top: _categories.isEmpty ? 0 : 22, bottom: 10),
-                  child: Text(_categories.isEmpty ? 'الخدمات' : 'الخدمات المتاحة', style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
+                  child: Text(_categories.isEmpty ? 'الخدمات' : 'الخدمات المتاحة', style:  TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
                 GridView.builder(
                   shrinkWrap: true,
@@ -252,7 +252,7 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
       backgroundColor: AppColors.card,
       child: ListView(children: [
         const SizedBox(height: 100),
-        Center(child: Text(msg, style: const TextStyle(color: AppColors.text2))),
+        Center(child: Text(msg, style:  TextStyle(color: AppColors.text2))),
       ]),
     );
   }
@@ -340,12 +340,12 @@ class _CategoryBrowserState extends State<CategoryBrowser> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.text2, fontSize: 10, fontWeight: FontWeight.w600),
+            style:  TextStyle(color: AppColors.text2, fontSize: 10, fontWeight: FontWeight.w600),
           ),
         ],
       ),
     );
   }
 
-  Widget _servicePlaceholder() => const Center(child: Icon(Icons.widgets_rounded, color: AppColors.text2, size: 30));
+  Widget _servicePlaceholder() =>  Center(child: Icon(Icons.widgets_rounded, color: AppColors.text2, size: 30));
 }

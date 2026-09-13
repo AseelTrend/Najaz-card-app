@@ -89,7 +89,7 @@ class _TopupSmsInlineTabState extends State<TopupSmsInlineTab> {
   @override
   Widget build(BuildContext context) {
     if (_regions.isEmpty) {
-      return const Center(
+      return  Center(
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text('لا توجد جهات تحويل متاحة حالياً', style: TextStyle(color: AppColors.text2)),
@@ -124,7 +124,7 @@ class _TopupSmsInlineTabState extends State<TopupSmsInlineTab> {
           ),
           const SizedBox(height: 14),
         ],
-        const Text('جهة التحويل', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+         Text('جهة التحويل', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -149,37 +149,37 @@ class _TopupSmsInlineTabState extends State<TopupSmsInlineTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('حوّل المبلغ إلى', style: TextStyle(color: AppColors.text2, fontSize: 11)),
+                 Text('حوّل المبلغ إلى', style: TextStyle(color: AppColors.text2, fontSize: 11)),
                 const SizedBox(height: 4),
-                Text('${_selectedProvider!['transfer_account']}', style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
+                Text('${_selectedProvider!['transfer_account']}', style:  TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
                 if ((_selectedProvider!['account_holder']?.toString().isNotEmpty ?? false))
-                  Text('${_selectedProvider!['account_holder']}', style: const TextStyle(color: AppColors.text2, fontSize: 12)),
+                  Text('${_selectedProvider!['account_holder']}', style:  TextStyle(color: AppColors.text2, fontSize: 12)),
               ],
             ),
           ),
         ],
         const SizedBox(height: 16),
-        const Text('رقم الهاتف الذي أرسلت منه', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+         Text('رقم الهاتف الذي أرسلت منه', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         TextField(
           controller: _phoneCtrl,
           keyboardType: TextInputType.phone,
-          style: const TextStyle(color: AppColors.text),
+          style:  TextStyle(color: AppColors.text),
           decoration: InputDecoration(
             hintText: '7XXXXXXXX',
-            hintStyle: const TextStyle(color: AppColors.text3),
+            hintStyle:  TextStyle(color: AppColors.text3),
             filled: true,
             fillColor: AppColors.card2,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(height: 16),
-        const Text('المبلغ المُرسَل', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+         Text('المبلغ المُرسَل', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         TextField(
           controller: _amountCtrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          style: const TextStyle(color: AppColors.text),
+          style:  TextStyle(color: AppColors.text),
           decoration: InputDecoration(
             hintText: '0',
             filled: true,

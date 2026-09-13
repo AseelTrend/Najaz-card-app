@@ -155,9 +155,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const Icon(Icons.logout_rounded, color: AppColors.red, size: 24),
             ),
             const SizedBox(height: 14),
-            const Text('هل أنت متأكد من تسجيل الخروج؟', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 14), textAlign: TextAlign.center),
+             Text('هل أنت متأكد من تسجيل الخروج؟', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 14), textAlign: TextAlign.center),
             const SizedBox(height: 6),
-            const Text('سيتعين عليك تسجيل الدخول مجدداً للوصول إلى محفظتك وسجل الطلبات.', style: TextStyle(color: AppColors.text2, fontSize: 12), textAlign: TextAlign.center),
+             Text('سيتعين عليك تسجيل الدخول مجدداً للوصول إلى محفظتك وسجل الطلبات.', style: TextStyle(color: AppColors.text2, fontSize: 12), textAlign: TextAlign.center),
           ],
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -347,6 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             activeColor: AppColors.primary,
             onChanged: (v) {
               setState(() => _darkMode = v);
+              AppColors.setDark(v); // [FEATURE] يبدّل المظهر فعلياً فور التبديل
               _saveSetting('dark_mode', '$v', v ? 'تم تفعيل الوضع الداكن' : 'تم تفعيل الوضع الفاتح');
             },
           ),
@@ -376,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             value: _language,
             underline: const SizedBox.shrink(),
             dropdownColor: AppColors.card2,
-            style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold),
+            style:  TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold),
             items: const [DropdownMenuItem(value: 'ar', child: Text('العربية')), DropdownMenuItem(value: 'en', child: Text('English'))],
             onChanged: (value) {
               if (value == null) return;
@@ -402,14 +403,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Row(children: [
             Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.gold.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.settings_rounded, color: AppColors.gold, size: 18)),
             const SizedBox(width: 12),
-            const Expanded(
+             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('الإعدادات', style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
                 SizedBox(height: 2),
                 Text('المنطقة الزمنية والأجهزة المصرّحة بالدخول', style: TextStyle(color: AppColors.text2, fontSize: 10.5)),
               ]),
             ),
-            const Icon(Icons.chevron_left_rounded, color: AppColors.text2, size: 20),
+             Icon(Icons.chevron_left_rounded, color: AppColors.text2, size: 20),
           ]),
         ),
       ),
@@ -424,9 +425,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
+            Text(title, style:  TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
-            Text(subtitle, style: const TextStyle(color: AppColors.text2, fontSize: 10.5)),
+            Text(subtitle, style:  TextStyle(color: AppColors.text2, fontSize: 10.5)),
           ]),
         ),
         const SizedBox(width: 8),
@@ -445,7 +446,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           iconColor: AppColors.cyan,
           title: 'سياسة الخصوصية',
           subtitle: 'تعرّف على كيفية حماية بياناتك وأمان معاملاتك',
-          trailing: const Icon(Icons.open_in_new_rounded, color: AppColors.text2, size: 17),
+          trailing:  Icon(Icons.open_in_new_rounded, color: AppColors.text2, size: 17),
           onTap: () => _openUrl('https://njaz.net/page.php?slug=privacy', 'تعذر فتح سياسة الخصوصية'),
         ),
         _divider(),
@@ -454,7 +455,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           iconColor: const Color(0xFF25D366),
           title: 'الدعم الفني المباشر',
           subtitle: 'تواصل معنا على مدار الساعة عبر واتساب',
-          trailing: const Icon(Icons.open_in_new_rounded, color: AppColors.text2, size: 17),
+          trailing:  Icon(Icons.open_in_new_rounded, color: AppColors.text2, size: 17),
           onTap: () => _openUrl('https://wa.me/967775199244', 'تعذر فتح واتساب'),
         ),
         _divider(),
@@ -463,7 +464,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Row(children: [
             Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.primary.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.info_rounded, color: AppColors.primary, size: 18)),
             const SizedBox(width: 12),
-            const Expanded(
+             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('إصدار تطبيق نجاز كارد', style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
                 SizedBox(height: 2),
@@ -491,9 +492,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
+              Text(title, style:  TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
               const SizedBox(height: 2),
-              Text(subtitle, style: const TextStyle(color: AppColors.text2, fontSize: 10.5)),
+              Text(subtitle, style:  TextStyle(color: AppColors.text2, fontSize: 10.5)),
             ]),
           ),
           trailing,
@@ -506,7 +507,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _sectionTitle(String title, {bool padded = true}) => Padding(
         padding: padded ? const EdgeInsets.only(bottom: 8, right: 2) : EdgeInsets.zero,
-        child: Text(title, style: const TextStyle(color: AppColors.text2, fontSize: 11.5, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
+        child: Text(title, style:  TextStyle(color: AppColors.text2, fontSize: 11.5, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
       );
 
   Widget _messageBox(String message, Color color) => Container(

@@ -73,8 +73,8 @@ class _WalletScreenState extends State<WalletScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('محفظتي', style: TextStyle(color: AppColors.text)),
-        iconTheme: const IconThemeData(color: AppColors.text),
+        title:  Text('محفظتي', style: TextStyle(color: AppColors.text)),
+        iconTheme:  IconThemeData(color: AppColors.text),
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -82,7 +82,7 @@ class _WalletScreenState extends State<WalletScreen> {
           color: AppColors.primary,
           backgroundColor: AppColors.card,
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ?  Center(child: CircularProgressIndicator(color: AppColors.primary))
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
@@ -103,14 +103,14 @@ class _WalletScreenState extends State<WalletScreen> {
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        const Text('سجل المعاملات',
+                         Text('سجل المعاملات',
                             style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(color: AppColors.card2, borderRadius: BorderRadius.circular(20)),
                           child: Text('${_transactions.length} عملية',
-                              style: const TextStyle(color: AppColors.text2, fontSize: 11)),
+                              style:  TextStyle(color: AppColors.text2, fontSize: 11)),
                         ),
                       ],
                     ),
@@ -118,7 +118,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     if (_transactions.isNotEmpty) _buildFilterRow(),
                     const SizedBox(height: 10),
                     if (_transactions.isEmpty)
-                      const Padding(
+                       Padding(
                         padding: EdgeInsets.only(top: 40),
                         child: Center(
                           child: Column(
@@ -205,7 +205,7 @@ class _WalletScreenState extends State<WalletScreen> {
             children: [
               Icon(positive ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded, color: color, size: 14),
               const SizedBox(width: 5),
-              Expanded(child: Text(label, style: const TextStyle(color: AppColors.text2, fontSize: 11))),
+              Expanded(child: Text(label, style:  TextStyle(color: AppColors.text2, fontSize: 11))),
             ],
           ),
           const SizedBox(height: 6),
@@ -267,9 +267,9 @@ class _WalletScreenState extends State<WalletScreen> {
                 Text(desc,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)),
+                    style:  TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text(createdAt, style: const TextStyle(color: AppColors.text3, fontSize: 10)),
+                Text(createdAt, style:  TextStyle(color: AppColors.text3, fontSize: 10)),
               ],
             ),
           ),

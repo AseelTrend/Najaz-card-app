@@ -128,7 +128,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Row(children: [
           Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.gold.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.schedule_rounded, color: AppColors.gold, size: 18)),
           const SizedBox(width: 12),
-          const Expanded(
+           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('توقيت التطبيق', style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)),
               SizedBox(height: 2),
@@ -140,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _timezone,
             underline: const SizedBox.shrink(),
             dropdownColor: AppColors.card2,
-            style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold),
+            style:  TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold),
             items: const [
               DropdownMenuItem(value: '3', child: Text('UTC+3 اليمن')),
               DropdownMenuItem(value: '2', child: Text('UTC+2 مصر/الشام')),
@@ -166,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
-          child: Text('${_devices.length} أجهزة مسجلة', style: const TextStyle(color: AppColors.text2, fontSize: 10)),
+          child: Text('${_devices.length} أجهزة مسجلة', style:  TextStyle(color: AppColors.text2, fontSize: 10)),
         ),
       ]),
     );
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Wrap(spacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                      Text(deviceName?.isNotEmpty == true ? deviceName! : 'جهاز ${type.isEmpty ? 'مجهول' : type}', style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(deviceName?.isNotEmpty == true ? deviceName! : 'جهاز ${type.isEmpty ? 'مجهول' : type}', style:  TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold)),
                       if (first)
                         Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: AppColors.green.withOpacity(.18), borderRadius: BorderRadius.circular(20)), child: const Text('الجهاز الأساسي', style: TextStyle(color: AppColors.green, fontSize: 9, fontWeight: FontWeight.bold))),
                       if (blocked)
@@ -215,7 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: AppColors.gold.withOpacity(.2), borderRadius: BorderRadius.circular(20)), child: const Text('بانتظار التصريح', style: TextStyle(color: AppColors.gold, fontSize: 9, fontWeight: FontWeight.bold))),
                     ]),
                     const SizedBox(height: 3),
-                    Text(subtitleParts.join('  •  '), style: const TextStyle(color: AppColors.text2, fontSize: 9.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(subtitleParts.join('  •  '), style:  TextStyle(color: AppColors.text2, fontSize: 9.5), maxLines: 1, overflow: TextOverflow.ellipsis),
                   ]),
                 ),
                 if (first)
@@ -263,7 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _sectionTitle(String title, {bool padded = true}) => Padding(
         padding: padded ? const EdgeInsets.only(bottom: 8, right: 2) : EdgeInsets.zero,
-        child: Text(title, style: const TextStyle(color: AppColors.text2, fontSize: 11.5, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
+        child: Text(title, style:  TextStyle(color: AppColors.text2, fontSize: 11.5, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
       );
 
   Widget _messageBox(String message, {Color color = AppColors.gold}) => Container(

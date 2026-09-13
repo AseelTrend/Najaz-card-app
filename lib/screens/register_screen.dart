@@ -56,8 +56,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('إنشاء حساب', style: TextStyle(color: AppColors.text)),
-        iconTheme: const IconThemeData(color: AppColors.text),
+        title:  Text('إنشاء حساب', style: TextStyle(color: AppColors.text)),
+        iconTheme:  IconThemeData(color: AppColors.text),
       ),
       body: SafeArea(
         child: Padding(
@@ -130,10 +130,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: c,
       obscureText: obscure,
       keyboardType: keyboardType,
-      style: const TextStyle(color: AppColors.text),
+      style:  TextStyle(color: AppColors.text),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.text2),
+        labelStyle:  TextStyle(color: AppColors.text2),
         prefixIcon: Icon(icon, color: AppColors.text2),
         filled: true,
         fillColor: AppColors.card2,

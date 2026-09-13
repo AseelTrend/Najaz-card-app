@@ -131,7 +131,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   Widget _closedBanner() => Container(width: double.infinity, padding: const EdgeInsets.all(12), color: AppColors.gold.withOpacity(.12), child: Row(children: [const Icon(Icons.lock_outline_rounded, color: AppColors.gold, size: 18), const SizedBox(width: 8), const Expanded(child: Text('هذه المحادثة مغلقة', style: TextStyle(color: AppColors.gold, fontSize: 12))), TextButton(onPressed: () => _openChat(newChat: true), child: const Text('محادثة جديدة'))]));
 
   Widget _messagesView() {
-    if (_messages.isEmpty) return const Center(child: Text('ابدأ محادثتك مع فريق الدعم', style: TextStyle(color: AppColors.text2)));
+    if (_messages.isEmpty) return  Center(child: Text('ابدأ محادثتك مع فريق الدعم', style: TextStyle(color: AppColors.text2)));
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),

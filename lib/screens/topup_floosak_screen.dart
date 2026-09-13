@@ -99,8 +99,8 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('محفظة فلوسك', style: TextStyle(color: AppColors.text)),
-        iconTheme: const IconThemeData(color: AppColors.text),
+        title:  Text('محفظة فلوسك', style: TextStyle(color: AppColors.text)),
+        iconTheme:  IconThemeData(color: AppColors.text),
       ),
       body: SafeArea(
         child: ListView(
@@ -130,30 +130,30 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
 
   List<Widget> _buildForm() {
     return [
-      const Text('المبلغ (ريال يمني)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+       Text('المبلغ (ريال يمني)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       TextField(
         controller: _amountCtrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        style: const TextStyle(color: AppColors.text),
+        style:  TextStyle(color: AppColors.text),
         decoration: InputDecoration(
           hintText: 'الحد الأدنى 100',
-          hintStyle: const TextStyle(color: AppColors.text3),
+          hintStyle:  TextStyle(color: AppColors.text3),
           filled: true,
           fillColor: AppColors.card2,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         ),
       ),
       const SizedBox(height: 16),
-      const Text('رقم هاتفك المسجل في فلوسك', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+       Text('رقم هاتفك المسجل في فلوسك', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       TextField(
         controller: _phoneCtrl,
         keyboardType: TextInputType.phone,
-        style: const TextStyle(color: AppColors.text),
+        style:  TextStyle(color: AppColors.text),
         decoration: InputDecoration(
           hintText: '7XXXXXXXX',
-          hintStyle: const TextStyle(color: AppColors.text3),
+          hintStyle:  TextStyle(color: AppColors.text3),
           filled: true,
           fillColor: AppColors.card2,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -181,7 +181,7 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
     return [
       const Icon(Icons.sms_outlined, color: AppColors.cyan, size: 44),
       const SizedBox(height: 10),
-      const Text('تم إرسال رمز تحقق مكون من 6 أرقام إلى هاتفك المسجل في فلوسك',
+       Text('تم إرسال رمز تحقق مكون من 6 أرقام إلى هاتفك المسجل في فلوسك',
           style: TextStyle(color: AppColors.text2, fontSize: 13), textAlign: TextAlign.center),
       const SizedBox(height: 20),
       TextField(
@@ -189,7 +189,7 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
         keyboardType: TextInputType.number,
         maxLength: 6,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: AppColors.text, fontSize: 22, letterSpacing: 8, fontWeight: FontWeight.bold),
+        style:  TextStyle(color: AppColors.text, fontSize: 22, letterSpacing: 8, fontWeight: FontWeight.bold),
         decoration: InputDecoration(
           counterText: '',
           hintText: '••••••',
@@ -217,7 +217,7 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
       Center(
         child: TextButton(
           onPressed: _loading ? null : () => setState(() => _phase = _FloosakPhase.form),
-          child: const Text('رجوع', style: TextStyle(color: AppColors.text2)),
+          child:  Text('رجوع', style: TextStyle(color: AppColors.text2)),
         ),
       ),
     ];
@@ -228,7 +228,7 @@ class _TopupFloosakScreenState extends State<TopupFloosakScreen> {
       const SizedBox(height: 20),
       const Icon(Icons.check_circle_rounded, color: AppColors.green, size: 60),
       const SizedBox(height: 16),
-      Text(_resultMsg ?? '', style: const TextStyle(color: AppColors.text, fontSize: 15), textAlign: TextAlign.center),
+      Text(_resultMsg ?? '', style:  TextStyle(color: AppColors.text, fontSize: 15), textAlign: TextAlign.center),
       const SizedBox(height: 24),
       SizedBox(
         width: double.infinity,

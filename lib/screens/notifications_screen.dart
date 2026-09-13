@@ -106,7 +106,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         color: AppColors.primary,
         backgroundColor: AppColors.card,
         child: _loading
-            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            ?  Center(child: CircularProgressIndicator(color: AppColors.primary))
             : _error != null
                 ? ListView(children: [const SizedBox(height: 130), Center(child: Text(_error!, style: const TextStyle(color: AppColors.red)))])
                 : ListView(
@@ -115,7 +115,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       _buildFilter(),
                       const SizedBox(height: 12),
                       if (_visibleNotifications.isEmpty)
-                        const Padding(
+                         Padding(
                           padding: EdgeInsets.only(top: 90),
                           child: Column(
                             children: [
@@ -194,11 +194,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(notification['title']?.toString() ?? 'إشعار', style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text(notification['title']?.toString() ?? 'إشعار', style:  TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(notification['message']?.toString() ?? '', style: const TextStyle(color: AppColors.text2, fontSize: 12, height: 1.4)),
+                    Text(notification['message']?.toString() ?? '', style:  TextStyle(color: AppColors.text2, fontSize: 12, height: 1.4)),
                     const SizedBox(height: 7),
-                    Text(notification['time_ago']?.toString() ?? notification['created_at']?.toString() ?? '', style: const TextStyle(color: AppColors.text3, fontSize: 10)),
+                    Text(notification['time_ago']?.toString() ?? notification['created_at']?.toString() ?? '', style:  TextStyle(color: AppColors.text3, fontSize: 10)),
                   ],
                 ),
               ),

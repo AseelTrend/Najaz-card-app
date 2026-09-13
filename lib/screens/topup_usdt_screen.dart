@@ -101,12 +101,12 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
         builder: (_) => AlertDialog(
           backgroundColor: AppColors.card,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(children: [
+          title:  Row(children: [
             Icon(Icons.check_circle_rounded, color: AppColors.green),
             SizedBox(width: 8),
             Text('تم الشحن', style: TextStyle(color: AppColors.text)),
           ]),
-          content: Text('تم إضافة \$$amount لرصيدك بنجاح', style: const TextStyle(color: AppColors.text2)),
+          content: Text('تم إضافة \$$amount لرصيدك بنجاح', style:  TextStyle(color: AppColors.text2)),
           actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسناً', style: TextStyle(color: AppColors.primary)))],
         ),
       );
@@ -123,7 +123,7 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
   void _copy(String value) {
     Clipboard.setData(ClipboardData(text: value));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم النسخ'), duration: Duration(seconds: 1), backgroundColor: AppColors.card2),
+       SnackBar(content: Text('تم النسخ'), duration: Duration(seconds: 1), backgroundColor: AppColors.card2),
     );
   }
 
@@ -140,8 +140,8 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('USDT — BEP20', style: TextStyle(color: AppColors.text)),
-        iconTheme: const IconThemeData(color: AppColors.text),
+        title:  Text('USDT — BEP20', style: TextStyle(color: AppColors.text)),
+        iconTheme:  IconThemeData(color: AppColors.text),
       ),
       body: SafeArea(
         child: ListView(
@@ -167,23 +167,23 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(children: [
+             Row(children: [
               Icon(Icons.account_balance_wallet_outlined, color: Color(0xFF26A17B)),
               SizedBox(width: 8),
               Text('إيداع USDT عبر شبكة BEP20', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold)),
             ]),
             const SizedBox(height: 8),
-            Text('الحد الأدنى للإيداع: ${minDep.toStringAsFixed(2)}\$', style: const TextStyle(color: AppColors.text2, fontSize: 12)),
+            Text('الحد الأدنى للإيداع: ${minDep.toStringAsFixed(2)}\$', style:  TextStyle(color: AppColors.text2, fontSize: 12)),
           ],
         ),
       ),
       const SizedBox(height: 16),
-      const Text('المبلغ (USDT)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+       Text('المبلغ (USDT)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       TextField(
         controller: _amountCtrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        style: const TextStyle(color: AppColors.text),
+        style:  TextStyle(color: AppColors.text),
         decoration: InputDecoration(
           hintText: '0.00',
           filled: true,
@@ -221,7 +221,7 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('المبلغ المطلوب إرساله بالضبط', style: TextStyle(color: AppColors.text2, fontSize: 12)),
+                 Text('المبلغ المطلوب إرساله بالضبط', style: TextStyle(color: AppColors.text2, fontSize: 12)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
@@ -238,7 +238,7 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
               children: [
                 Expanded(
                   child: Text('${_request!['unique_amount']} USDT',
-                      style: const TextStyle(color: AppColors.text, fontSize: 20, fontWeight: FontWeight.bold)),
+                      style:  TextStyle(color: AppColors.text, fontSize: 20, fontWeight: FontWeight.bold)),
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy_rounded, color: AppColors.primary, size: 18),
@@ -247,13 +247,13 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
               ],
             ),
             Divider(color: AppColors.border, height: 24),
-            const Text('عنوان المحفظة (BEP20)', style: TextStyle(color: AppColors.text2, fontSize: 12)),
+             Text('عنوان المحفظة (BEP20)', style: TextStyle(color: AppColors.text2, fontSize: 12)),
             const SizedBox(height: 4),
             Row(
               children: [
                 Expanded(
                   child: Text('${_request!['wallet_address']}',
-                      style: const TextStyle(color: AppColors.text, fontSize: 12), maxLines: 2),
+                      style:  TextStyle(color: AppColors.text, fontSize: 12), maxLines: 2),
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy_rounded, color: AppColors.primary, size: 18),
@@ -267,14 +267,14 @@ class _TopupUsdtScreenState extends State<TopupUsdtScreen> {
         ),
       ),
       const SizedBox(height: 20),
-      const Text('بعد إتمام التحويل، ألصق رقم العملية (txID)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+       Text('بعد إتمام التحويل، ألصق رقم العملية (txID)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       TextField(
         controller: _txCtrl,
-        style: const TextStyle(color: AppColors.text, fontSize: 12),
+        style:  TextStyle(color: AppColors.text, fontSize: 12),
         decoration: InputDecoration(
           hintText: '0x...',
-          hintStyle: const TextStyle(color: AppColors.text3),
+          hintStyle:  TextStyle(color: AppColors.text3),
           filled: true,
           fillColor: AppColors.card2,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),

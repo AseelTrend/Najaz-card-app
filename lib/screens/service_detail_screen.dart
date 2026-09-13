@@ -148,7 +148,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Row(
-          children: const [
+          children:  [
             Icon(Icons.check_circle_rounded, color: AppColors.green),
             SizedBox(width: 8),
             Text('تم الطلب بنجاح', style: TextStyle(color: AppColors.text, fontSize: 16)),
@@ -159,9 +159,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (result['order_ref'] != null)
-              Text('رقم الطلب: ${result['order_ref']}', style: const TextStyle(color: AppColors.text2)),
+              Text('رقم الطلب: ${result['order_ref']}', style:  TextStyle(color: AppColors.text2)),
             if (result['new_balance'] != null)
-              Text('رصيدك الجديد: \$${result['new_balance']}', style: const TextStyle(color: AppColors.text2)),
+              Text('رصيدك الجديد: \$${result['new_balance']}', style:  TextStyle(color: AppColors.text2)),
             if (result['delivered_code'] != null && result['delivered_code'].toString().isNotEmpty) ...[
               const SizedBox(height: 8),
               Container(
@@ -207,13 +207,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.text),
-        title: Text(_service?['name'] ?? '', style: const TextStyle(color: AppColors.text, fontSize: 16)),
+        iconTheme:  IconThemeData(color: AppColors.text),
+        title: Text(_service?['name'] ?? '', style:  TextStyle(color: AppColors.text, fontSize: 16)),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ?  Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _service == null
-              ? Center(child: Text(_error ?? 'خطأ', style: const TextStyle(color: AppColors.text)))
+              ? Center(child: Text(_error ?? 'خطأ', style:  TextStyle(color: AppColors.text)))
               : SafeArea(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
@@ -229,7 +229,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           ),
                         const SizedBox(height: 16),
                         Text(_service!['name'] ?? '',
-                            style: const TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
+                            style:  TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -242,7 +242,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         ),
                         if ((_service!['description'] ?? '').toString().isNotEmpty) ...[
                           const SizedBox(height: 12),
-                          Text(_service!['description'], style: const TextStyle(color: AppColors.text2)),
+                          Text(_service!['description'], style:  TextStyle(color: AppColors.text2)),
                         ],
                         const SizedBox(height: 20),
 
@@ -255,11 +255,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Text('الكمية', style: TextStyle(color: AppColors.text)),
+                               Text('الكمية', style: TextStyle(color: AppColors.text)),
                               const Spacer(),
                               IconButton(
                                 onPressed: _quantity > _minQuantity ? () => _setQuantity(_quantity - 1) : null,
-                                icon: const Icon(Icons.remove_circle_outline_rounded, color: AppColors.text2),
+                                icon:  Icon(Icons.remove_circle_outline_rounded, color: AppColors.text2),
                               ),
                               SizedBox(
                                 width: 72,
@@ -269,8 +269,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                                   onEditingComplete: _normalizeQuantity,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.bold),
-                                  decoration: const InputDecoration(
+                                  style:  TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.bold),
+                                  decoration:  InputDecoration(
                                     isDense: true,
                                     filled: true,
                                     fillColor: AppColors.card2,
@@ -281,7 +281,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                               ),
                               IconButton(
                                 onPressed: _quantity < _maxQuantity ? () => _setQuantity(_quantity + 1) : null,
-                                icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.text2),
+                                icon:  Icon(Icons.add_circle_outline_rounded, color: AppColors.text2),
                               ),
                             ],
                           ),
@@ -298,7 +298,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           child: Column(children: [
                             Row(
                               children: [
-                                const Text('الإجمالي', style: TextStyle(color: AppColors.text2, fontSize: 13)),
+                                 Text('الإجمالي', style: TextStyle(color: AppColors.text2, fontSize: 13)),
                                 const Spacer(),
                                 Text(
                                   '\$${formatMoney(_totalPrice)}',
@@ -310,9 +310,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                               padding: const EdgeInsets.only(top: 6),
                               child: Row(
                                 children: [
-                                  const Text('رصيدك في المحفظة', style: TextStyle(color: AppColors.text2, fontSize: 11.5)),
+                                   Text('رصيدك في المحفظة', style: TextStyle(color: AppColors.text2, fontSize: 11.5)),
                                   const Spacer(),
-                                  Text('\$${formatMoney(_userBalance)}', style: const TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                                  Text('\$${formatMoney(_userBalance)}', style:  TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ),
@@ -337,10 +337,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                               padding: const EdgeInsets.only(top: 12),
                               child: TextField(
                                 controller: _fieldControllers[f['field_name']],
-                                style: const TextStyle(color: AppColors.text),
+                                style:  TextStyle(color: AppColors.text),
                                 decoration: InputDecoration(
                                   labelText: f['field_label'] + (f['is_required'] == 1 ? ' *' : ''),
-                                  labelStyle: const TextStyle(color: AppColors.text2),
+                                  labelStyle:  TextStyle(color: AppColors.text2),
                                   filled: true,
                                   fillColor: AppColors.card2,
                                   border: OutlineInputBorder(
@@ -359,10 +359,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           const SizedBox(height: 12),
                           TextField(
                             controller: _couponCtrl,
-                            style: const TextStyle(color: AppColors.text),
+                            style:  TextStyle(color: AppColors.text),
                             decoration: InputDecoration(
                               labelText: 'كود الخصم (اختياري)',
-                              labelStyle: const TextStyle(color: AppColors.text2),
+                              labelStyle:  TextStyle(color: AppColors.text2),
                               filled: true,
                               fillColor: AppColors.card2,
                               border: OutlineInputBorder(
@@ -397,7 +397,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 child: Center(
                                   child: _placing
-                                      ? const SizedBox(
+                                      ?  SizedBox(
                                           height: 20, width: 20,
                                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                                       : Text(_hasEnoughBalance ? 'تأكيد الطلب' : 'الرصيد غير كافٍ',

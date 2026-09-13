@@ -86,13 +86,13 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
         builder: (_) => AlertDialog(
           backgroundColor: AppColors.card,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(children: [
+          title:  Row(children: [
             Icon(Icons.check_circle_rounded, color: AppColors.green),
             SizedBox(width: 8),
             Text('تم الإرسال', style: TextStyle(color: AppColors.text)),
           ]),
           content: Text(data['msg']?.toString() ?? 'تم إرسال طلب الشحن، سيتم مراجعته قريباً',
-              style: const TextStyle(color: AppColors.text2)),
+              style:  TextStyle(color: AppColors.text2)),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسناً', style: TextStyle(color: AppColors.primary))),
           ],
@@ -111,7 +111,7 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
   void _copy(String value) {
     Clipboard.setData(ClipboardData(text: value));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم النسخ'), duration: Duration(seconds: 1), backgroundColor: AppColors.card2),
+       SnackBar(content: Text('تم النسخ'), duration: Duration(seconds: 1), backgroundColor: AppColors.card2),
     );
   }
 
@@ -125,8 +125,8 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: Text(widget.method['name']?.toString() ?? 'تحويل يدوي', style: const TextStyle(color: AppColors.text)),
-        iconTheme: const IconThemeData(color: AppColors.text),
+        title: Text(widget.method['name']?.toString() ?? 'تحويل يدوي', style:  TextStyle(color: AppColors.text)),
+        iconTheme:  IconThemeData(color: AppColors.text),
       ),
       body: SafeArea(
         child: ListView(
@@ -139,7 +139,7 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('بيانات التحويل', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 13)),
+                     Text('بيانات التحويل', style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 10),
                     ...fields.map((f) => Padding(
                           padding: const EdgeInsets.only(bottom: 8),
@@ -149,8 +149,8 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(f['label']?.toString() ?? '', style: const TextStyle(color: AppColors.text2, fontSize: 11)),
-                                    Text(f['value']?.toString() ?? '', style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)),
+                                    Text(f['label']?.toString() ?? '', style:  TextStyle(color: AppColors.text2, fontSize: 11)),
+                                    Text(f['value']?.toString() ?? '', style:  TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w600)),
                                   ],
                                 ),
                               ),
@@ -167,7 +167,7 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
               ),
               const SizedBox(height: 16),
             ],
-            const Text('العملة', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+             Text('العملة', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -184,17 +184,17 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
               }).toList(),
             ),
             const SizedBox(height: 16),
-            const Text('المبلغ المُرسَل', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+             Text('المبلغ المُرسَل', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             TextField(
               controller: _amountCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) => setState(() {}),
-              style: const TextStyle(color: AppColors.text),
+              style:  TextStyle(color: AppColors.text),
               decoration: InputDecoration(
                 hintText: '0.00',
                 suffixText: symbol,
-                suffixStyle: const TextStyle(color: AppColors.text2),
+                suffixStyle:  TextStyle(color: AppColors.text2),
                 filled: true,
                 fillColor: AppColors.card2,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -205,7 +205,7 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
               Text('سيُضاف لرصيدك: \$${_amountUsd.toStringAsFixed(4)}', style: const TextStyle(color: AppColors.green, fontSize: 12)),
             ],
             const SizedBox(height: 16),
-            const Text('إيصال التحويل (اختياري)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+             Text('إيصال التحويل (اختياري)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             InkWell(
               onTap: _pickReceipt,
@@ -225,7 +225,7 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
                     const SizedBox(height: 6),
                     Text(
                       _receipt != null ? _receipt!.path.split('/').last : 'اضغط لإرفاق صورة أو PDF للإيصال',
-                      style: const TextStyle(color: AppColors.text2, fontSize: 12),
+                      style:  TextStyle(color: AppColors.text2, fontSize: 12),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -233,15 +233,15 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('ملاحظات (اختياري)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
+             Text('ملاحظات (اختياري)', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             TextField(
               controller: _notesCtrl,
               maxLines: 2,
-              style: const TextStyle(color: AppColors.text),
+              style:  TextStyle(color: AppColors.text),
               decoration: InputDecoration(
                 hintText: 'رقم الحوالة أو أي تفاصيل إضافية',
-                hintStyle: const TextStyle(color: AppColors.text3),
+                hintStyle:  TextStyle(color: AppColors.text3),
                 filled: true,
                 fillColor: AppColors.card2,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),

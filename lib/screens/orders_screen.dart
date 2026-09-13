@@ -74,7 +74,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Padding(
+         Padding(
           padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Row(
             children: [
@@ -88,12 +88,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
             color: AppColors.primary,
             backgroundColor: AppColors.card,
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ?  Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : _error != null
                     ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.red)))
                     : _orders.isEmpty
                         ? ListView(
-                            children: const [
+                            children:  [
                               SizedBox(height: 100),
                               Center(
                                 child: Text('لا توجد طلبات بعد', style: TextStyle(color: AppColors.text2)),
@@ -128,7 +128,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                       children: [
                                         Expanded(
                                           child: Text(o['service_name'] ?? '',
-                                              style: const TextStyle(
+                                              style:  TextStyle(
                                                   color: AppColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
                                         ),
                                         Container(
@@ -146,7 +146,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                     Row(
                                       children: [
                                         Text('الكمية: ${o['quantity']}',
-                                            style: const TextStyle(color: AppColors.text2, fontSize: 12)),
+                                            style:  TextStyle(color: AppColors.text2, fontSize: 12)),
                                         const Spacer(),
                                         Text('\$${o['total_price']}',
                                             style: const TextStyle(
@@ -156,7 +156,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                     if (o['ref_id'] != null) ...[
                                       const SizedBox(height: 4),
                                       Text('رقم الطلب: ${o['ref_id']}',
-                                          style: const TextStyle(color: AppColors.text2, fontSize: 11)),
+                                          style:  TextStyle(color: AppColors.text2, fontSize: 11)),
                                     ],
                                   ],
                                   ),

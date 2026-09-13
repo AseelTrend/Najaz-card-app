@@ -69,7 +69,7 @@ class _TopupScreenState extends State<TopupScreen> with SingleTickerProviderStat
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+       SnackBar(
         content: Text('يجب توثيق هويتك أولاً قبل شحن الرصيد — يمكنك إتمام التوثيق من موقع نجاز'),
         backgroundColor: AppColors.card2,
       ),
@@ -90,8 +90,8 @@ class _TopupScreenState extends State<TopupScreen> with SingleTickerProviderStat
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title: const Text('شحن الرصيد', style: TextStyle(color: AppColors.text)),
-        iconTheme: const IconThemeData(color: AppColors.text),
+        title:  Text('شحن الرصيد', style: TextStyle(color: AppColors.text)),
+        iconTheme:  IconThemeData(color: AppColors.text),
         bottom: (_loading || _tabController == null)
             ? null
             : TabBar(
@@ -143,7 +143,7 @@ class _TopupScreenState extends State<TopupScreen> with SingleTickerProviderStat
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('رصيدك الحالي', style: TextStyle(color: AppColors.text2, fontSize: 12)),
+           Text('رصيدك الحالي', style: TextStyle(color: AppColors.text2, fontSize: 12)),
           Text('${balance.toStringAsFixed(2)} $symbol',
               style: const TextStyle(color: AppColors.green, fontSize: 14, fontWeight: FontWeight.bold)),
         ],
@@ -256,17 +256,17 @@ class _TopupScreenState extends State<TopupScreen> with SingleTickerProviderStat
           const SizedBox(height: 12),
           const Icon(Icons.confirmation_num_outlined, color: AppColors.gold, size: 46),
           const SizedBox(height: 10),
-          const Text('شحن بكود البطاقة', style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
+           Text('شحن بكود البطاقة', style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          const Text('أدخل الكود لشحن رصيدك فوراً', style: TextStyle(color: AppColors.text2, fontSize: 12)),
+           Text('أدخل الكود لشحن رصيدك فوراً', style: TextStyle(color: AppColors.text2, fontSize: 12)),
           const SizedBox(height: 20),
           TextField(
             controller: _cardCodeCtrl,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.text, letterSpacing: 2, fontWeight: FontWeight.bold),
+            style:  TextStyle(color: AppColors.text, letterSpacing: 2, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               hintText: 'XXXXXXXX-XXXXXXXX-XXXXXXXX',
-              hintStyle: const TextStyle(color: AppColors.text3, letterSpacing: 1),
+              hintStyle:  TextStyle(color: AppColors.text3, letterSpacing: 1),
               filled: true,
               fillColor: AppColors.card2,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -353,7 +353,7 @@ class _EmptyHint extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Text(text, style: const TextStyle(color: AppColors.text2), textAlign: TextAlign.center),
+        child: Text(text, style:  TextStyle(color: AppColors.text2), textAlign: TextAlign.center),
       ),
     );
   }
@@ -404,13 +404,13 @@ class _MethodCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text(title, style:  TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 3),
-                    Text(subtitle, style: const TextStyle(color: AppColors.text2, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(subtitle, style:  TextStyle(color: AppColors.text2, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_left_rounded, color: AppColors.text3),
+               Icon(Icons.chevron_left_rounded, color: AppColors.text3),
             ],
           ),
         ),
