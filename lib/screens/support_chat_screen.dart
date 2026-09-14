@@ -53,9 +53,9 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       _startPolling();
       _scrollToBottom();
     } on ApiException catch (e) {
-      if (mounted) setState(() => _error = e.message);
-    } catch (e) {
-      if (mounted) setState(() => _error = 'تعذر الاتصال بخدمة الدعم');
+      if (mounted) setState(() => _error = 'ApiException: ${e.message} | data: ${e.data}');
+    } catch (e, stack) {
+      if (mounted) setState(() => _error = 'خطأ تشخيصي: $e\n\n$stack');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -126,12 +126,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     );
   }
 
-  Widget _errorView() => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text(_error!, style: const TextStyle(color: AppColors.red)), const SizedBox(height: 12), FilledButton(onPressed: _openChat, child: const Text('إعادة المحاولة'))]));
+  Widget _errorView() => Center(child: SingleChildScrollView(child: Padding(padding: const EdgeInsets.all(16), child: Column(mainAxisSize: MainAxisSize.min, children: [Text(_error!, style: const TextStyle(color: AppColors.red)), const SizedBox(height: 12), FilledButton(onPressed: _openChat, child: const Text('إعادة المحاولة'))])));
 
   Widget _closedBanner() => Container(width: double.infinity, padding: const EdgeInsets.all(12), color: AppColors.gold.withOpacity(.12), child: Row(children: [const Icon(Icons.lock_outline_rounded, color: AppColors.gold, size: 18), const SizedBox(width: 8), const Expanded(child: Text('هذه المحادثة مغلقة', style: TextStyle(color: AppColors.gold, fontSize: 12))), TextButton(onPressed: () => _openChat(newChat: true), child: const Text('محادثة جديدة'))]));
 
   Widget _messagesView() {
-    if (_messages.isEmpty) return  Center(child: Text('ابدأ محادثتك مع فريق الدعم', style: TextStyle(color: AppColors.text2)));
+    if (_messages.isEmpty) return Center(child: Text('ابدأ محادثتك مع فريق الدعم', style: TextStyle(color: AppColors.text2)));
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
