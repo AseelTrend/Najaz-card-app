@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../services/google_auth_service.dart';
 import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
@@ -116,10 +117,27 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _openGoogleAuth() async {
-    final uri = Uri.parse('https://njaz.net/auth/google/redirect.php');
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) {
-      setState(() => _error = 'تعذر فتح تسجيل الدخول عبر Google');
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await GoogleAuthService.signIn();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return;
+      setState(() => _error = 'تعذر تسجيل الدخول عبر Google، حاول مرة أخرى');
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'تعذر تسجيل الدخول عبر Google، تحقق من الإنترنت وحاول مرة أخرى');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
