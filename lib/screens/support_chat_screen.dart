@@ -227,7 +227,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: isMine ? AppColors.primary : AppColors.surface,
+              color: isMine ? AppColors.primary : AppColors.card,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text(body),
