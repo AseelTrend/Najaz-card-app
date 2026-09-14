@@ -1,20 +1,16 @@
 <?php
 /**
  * جسر آمن لتشغيل كبينة السداد من تطبيق الموبايل.
- * يستخدم نفس نظام Floosak Agent الذي تعمل به صفحة telecom.php.
+ * يستخدم نفس نظام Floosak Agent وصفحة telecom.php الأصلية.
  */
 require_once __DIR__ . '/_common.php';
-
-// يتحقق من JWT ويملأ $_SESSION للمستخدم في هذا الطلب فقط.
 mobileAuthorizeRequest($pdo, true);
-
 header('Content-Type: application/json; charset=utf-8');
 
 function mobileTelecomOk(array $data = []): void {
     echo json_encode(array_merge(['status' => true], $data), JSON_UNESCAPED_UNICODE);
     exit;
 }
-
 function mobileTelecomErr(string $message, array $data = []): void {
     echo json_encode(array_merge(['status' => false, 'message' => $message], $data), JSON_UNESCAPED_UNICODE);
     exit;
@@ -50,11 +46,24 @@ if ($action === 'detect_network') {
             mobileTelecomOk(['network' => $net]);
         }
     }
-
     mobileTelecomErr('لم يتم التعرف على الشبكة');
 }
 
-// مبالغ الشحن الحر من نفس جدول الباقات المستخدم في صفحة telecom.php.
+// جلب كل الفئات والباقات من نفس جدول الموقع.
+if ($action === 'get_bunches') {
+    $methodId = (int)($_GET['network_id'] ?? $_POST['method_id'] ?? 0);
+    if (!$methodId) mobileTelecomOk(['bunches' => []]);
+
+    try {
+        $st = $pdo->prepare("SELECT id,bunch_id,bunch_name,code,unified_code,price,validity,is_free_amount,payment_type,section,bundle_group FROM floosak_agent_bunches WHERE method_id=? AND status=1 ORDER BY section, sort_order, id");
+        $st->execute([$methodId]);
+        mobileTelecomOk(['bunches' => $st->fetchAll(PDO::FETCH_ASSOC)]);
+    } catch (Throwable $e) {
+        mobileTelecomErr('تعذر جلب فئات الشحن');
+    }
+}
+
+// مبالغ الشحن الحر — للتوافق مع الواجهة الحالية.
 if ($action === 'get_quick_amounts') {
     $methodId = (int)($_GET['network_id'] ?? 0);
     if (!$methodId) mobileTelecomOk(['amounts' => []]);
@@ -81,7 +90,50 @@ if ($action === 'get_quick_amounts') {
     }
 }
 
-// تنفيذ الشحن بنفس معالجة do_topup الموجودة في صفحة telecom.php.
+// فحص الرقم: نفس check_service الموجود في telecom.php.
+if ($action === 'check_service') {
+    $phone = preg_replace('/[^0-9]/', '', (string)($_POST['phone'] ?? $_POST['target_number'] ?? ''));
+    $methodId = (int)($_POST['network_id'] ?? $_POST['method_id'] ?? 0);
+    $bunchId = trim((string)($_POST['bunch_id'] ?? '340'));
+
+    if (strlen($phone) < 7) mobileTelecomErr('رقم الهاتف غير صحيح');
+    if (!$methodId) mobileTelecomErr('الشبكة غير معروفة');
+
+    $_POST['ajax_action'] = 'check_service';
+    $_POST['target_number'] = $phone;
+    $_POST['method_id'] = $methodId;
+    $_POST['bunch_id'] = $bunchId;
+
+    require dirname(__DIR__, 2) . '/telecom.php';
+    exit;
+}
+
+// تنفيذ أي فئة شحن محددة بنفس do_topup في الموقع.
+if ($action === 'topup') {
+    $phone = preg_replace('/[^0-9]/', '', (string)($_POST['phone'] ?? ''));
+    $methodId = (int)($_POST['network_id'] ?? 0);
+    $bunchId = trim((string)($_POST['bunch_id'] ?? ''));
+    $amount = (float)($_POST['amount'] ?? 0);
+    $withSolfa = (int)($_POST['with_solfa'] ?? 0);
+
+    if (strlen($phone) < 7) mobileTelecomErr('رقم الهاتف غير صحيح');
+    if (!$methodId) mobileTelecomErr('الشبكة غير معروفة');
+    if ($bunchId === '') mobileTelecomErr('اختر فئة الشحن');
+    if ($amount <= 0) mobileTelecomErr('المبلغ غير صحيح');
+
+    $_POST['ajax_action'] = 'do_topup';
+    $_POST['target_number'] = $phone;
+    $_POST['method_id'] = $methodId;
+    $_POST['bunch_id'] = $bunchId;
+    $_POST['amount'] = $amount;
+    $_POST['with_solfa'] = $withSolfa;
+    $_POST['pay_from'] = 'balance';
+
+    require dirname(__DIR__, 2) . '/telecom.php';
+    exit;
+}
+
+// المسار القديم للشحن بالمبلغ الحر يبقى مدعوماً.
 if ($action === 'pay_balance') {
     $phone = preg_replace('/[^0-9]/', '', (string)($_POST['phone'] ?? ''));
     $methodId = (int)($_POST['network_id'] ?? 0);
@@ -92,7 +144,7 @@ if ($action === 'pay_balance') {
     if ($amount <= 0) mobileTelecomErr('المبلغ غير صحيح');
 
     try {
-        $st = $pdo->prepare("SELECT id,bunch_id,unified_code,section,is_free_amount FROM floosak_agent_bunches WHERE method_id=? AND status=1 AND (section='amount' OR is_free_amount=1) ORDER BY CASE WHEN is_free_amount=1 THEN 0 ELSE 1 END, sort_order,id LIMIT 1");
+        $st = $pdo->prepare("SELECT id,bunch_id,unified_code FROM floosak_agent_bunches WHERE method_id=? AND status=1 AND (section='amount' OR is_free_amount=1) ORDER BY CASE WHEN is_free_amount=1 THEN 0 ELSE 1 END, sort_order,id LIMIT 1");
         $st->execute([$methodId]);
         $bunch = $st->fetch(PDO::FETCH_ASSOC);
     } catch (Throwable $e) {
@@ -101,17 +153,14 @@ if ($action === 'pay_balance') {
 
     if (!$bunch) mobileTelecomErr('لا توجد فئة شحن حر مهيأة لهذه الشبكة');
 
-    $bunchId = (string)($bunch['unified_code'] ?: $bunch['bunch_id'] ?: $bunch['id']);
-
     $_POST['ajax_action'] = 'do_topup';
     $_POST['target_number'] = $phone;
     $_POST['method_id'] = $methodId;
-    $_POST['bunch_id'] = $bunchId;
+    $_POST['bunch_id'] = (string)($bunch['unified_code'] ?: $bunch['bunch_id'] ?: $bunch['id']);
     $_POST['amount'] = $amount;
     $_POST['with_solfa'] = 0;
     $_POST['pay_from'] = 'balance';
 
-    // استدعاء صفحة الإنتاج نفسها؛ وهي التي تنفذ الخصم والشحن والتسجيل.
     require dirname(__DIR__, 2) . '/telecom.php';
     exit;
 }
