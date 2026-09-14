@@ -58,10 +58,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       _scrollToBottom();
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
-    } catch (e, stack) {
-      if (mounted) {
-        setState(() => _error = 'خطأ: $e\n\n$stack');
-      }
+    } catch (_) {
+      if (mounted) setState(() => _error = 'تعذر فتح المحادثة، حاول مرة أخرى');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -126,13 +124,35 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       if (!mounted) return;
       _inputController.clear();
       final message = data['message'];
+      final autoReply = data['auto_reply'] == true;
+
       setState(() {
-        if (message is Map<String, dynamic>) {
+        if (message is Map) {
+          final senderType = message['sender_type']?.toString() ?? '';
           final id = int.tryParse(message['id']?.toString() ?? '') ?? 0;
+
+          // عند وجود رد تلقائي، السيرفر يعيد الرد التلقائي في message
+          // وليس رسالة المستخدم؛ لذلك نعرض رسالة المستخدم محلياً أولاً.
+          if (senderType != 'user') {
+            _messages.add({
+              'id': 0,
+              'sender_type': 'user',
+              'message': text,
+              'created_at': DateTime.now().toIso8601String(),
+            });
+          }
+
           if (id > _lastMessageId) {
             _messages.add(message);
             _lastMessageId = id;
           }
+        } else if (autoReply) {
+          _messages.add({
+            'id': 0,
+            'sender_type': 'user',
+            'message': text,
+            'created_at': DateTime.now().toIso8601String(),
+          });
         }
       });
       _scrollToBottom();
@@ -325,8 +345,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       _scrollToBottom();
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
-    } catch (e, stack) {
-      if (mounted) setState(() => _error = 'خطأ: $e\n\n$stack');
+    } catch (_) {
+      if (mounted) setState(() => _error = 'تعذر تحميل المحادثة، حاول مرة أخرى');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -412,23 +432,22 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   }
 
   Widget _errorView() => Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _error!,
-                  style: const TextStyle(color: AppColors.red),
-                ),
-                const SizedBox(height: 12),
-                FilledButton(
-                  onPressed: _openChat,
-                  child: const Text('إعادة المحاولة'),
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.red),
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: _openChat,
+                child: const Text('إعادة المحاولة'),
+              ),
+            ],
           ),
         ),
       );
