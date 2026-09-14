@@ -37,17 +37,12 @@ if ($action === 'detect_network') {
     $prefix = substr($phone, 0, 2);
     foreach ($prefixMap as $net) {
         if (in_array($prefix, $net['prefixes'], true)) {
-            // جلب بيانات الطريقة الفعلية من نفس جدول نظام Floosak.
             try {
                 $st = $pdo->prepare("SELECT * FROM floosak_agent_methods WHERE method_id=? AND status=1 LIMIT 1");
                 $st->execute([$net['id']]);
                 $row = $st->fetch(PDO::FETCH_ASSOC);
-                if ($row) {
-                    $net = array_merge($net, $row);
-                }
-            } catch (Throwable $e) {
-                // الخريطة الأساسية تكفي للكشف، ولا نفشل الكشف بسبب بيانات إضافية.
-            }
+                if ($row) $net = array_merge($net, $row);
+            } catch (Throwable $e) {}
 
             $net['id'] = (int)$net['id'];
             $net['method_id'] = (int)$net['id'];
@@ -68,7 +63,6 @@ if ($action === 'get_quick_amounts') {
         $st = $pdo->prepare("SELECT id,bunch_id,unified_code,price,section,is_free_amount,payment_type FROM floosak_agent_bunches WHERE method_id=? AND status=1 AND (section='amount' OR is_free_amount=1) ORDER BY sort_order,id");
         $st->execute([$methodId]);
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);
-
         $amounts = [];
         foreach ($rows as $row) {
             $price = (float)($row['price'] ?? 0);
@@ -87,7 +81,7 @@ if ($action === 'get_quick_amounts') {
     }
 }
 
-// تنفيذ الشحن باستخدام نفس endpoint Floosak Agent الخاص بالموقع.
+// تنفيذ الشحن بنفس معالجة do_topup الموجودة في صفحة telecom.php.
 if ($action === 'pay_balance') {
     $phone = preg_replace('/[^0-9]/', '', (string)($_POST['phone'] ?? ''));
     $methodId = (int)($_POST['network_id'] ?? 0);
@@ -109,7 +103,6 @@ if ($action === 'pay_balance') {
 
     $bunchId = (string)($bunch['unified_code'] ?: $bunch['bunch_id'] ?: $bunch['id']);
 
-    // نفس أسماء الحقول التي يستخدمها الموقع في do_topup.
     $_POST['ajax_action'] = 'do_topup';
     $_POST['target_number'] = $phone;
     $_POST['method_id'] = $methodId;
@@ -118,8 +111,8 @@ if ($action === 'pay_balance') {
     $_POST['with_solfa'] = 0;
     $_POST['pay_from'] = 'balance';
 
-    // نقطة التنفيذ الأصلية لنظام Floosak Agent.
-    require dirname(__DIR__) . '/floosak_agent_topup.php';
+    // استدعاء صفحة الإنتاج نفسها؛ وهي التي تنفذ الخصم والشحن والتسجيل.
+    require dirname(__DIR__, 2) . '/telecom.php';
     exit;
 }
 
