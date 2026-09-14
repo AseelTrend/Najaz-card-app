@@ -65,7 +65,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   int _latestMessageId(List<dynamic> messages) {
     if (messages.isEmpty) return 0;
-    return int.tryParse(messages.last['id']?.toString() ?? '') ?? 0;
+    final rawId = messages.last['id'];
+    return int.tryParse(rawId.toString()) ?? 0;
   }
 
   void _startPolling() {
@@ -74,7 +75,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   }
 
   Future<void> _poll() async {
-    final chatId = (_chat?['id'] as num?)?.toInt();
+    final rawChatId = _chat?['id'];
+    final chatId = int.tryParse(rawChatId.toString());
     if (chatId == null) return;
     try {
       final messages = await ApiService.pollSupportChat(
@@ -92,7 +94,8 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   Future<void> _send() async {
     final text = _inputController.text.trim();
-    final chatId = (_chat?['id'] as num?)?.toInt();
+    final rawChatId = _chat?['id'];
+    final chatId = int.tryParse(rawChatId.toString());
     if (text.isEmpty || chatId == null || _sending) return;
     setState(() => _sending = true);
     try {
