@@ -108,8 +108,9 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       final message = data['message'];
       final autoReply = data['auto_reply'];
       setState(() {
-        if (message != null) _messages.add(message);
-        if (autoReply != null) _messages.add(autoReply);
+        if (message is Map<String, dynamic>) _messages.add(message);
+        // auto_reply is a boolean indicator from the API, not a message object.
+        // The actual auto-reply message arrives through polling.
         _lastMessageId = _latestMessageId(_messages);
       });
       _scrollToBottom();
