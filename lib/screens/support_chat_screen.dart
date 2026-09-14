@@ -53,9 +53,11 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       _startPolling();
       _scrollToBottom();
     } on ApiException catch (e) {
-      if (mounted) setState(() => _error = 'ApiException: ${e.message} | data: ${e.data}');
+      if (mounted) setState(() => _error = e.message);
     } catch (e, stack) {
-      if (mounted) setState(() => _error = 'خطأ تشخيصي: $e\n\n$stack');
+      if (mounted) {
+        setState(() => _error = 'خطأ: $e\n\n$stack');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -68,34 +70,58 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   void _startPolling() {
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _poll());
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) => _poll());
   }
 
   Future<void> _poll() async {
     final chatId = (_chat?['id'] as num?)?.toInt();
     if (chatId == null) return;
     try {
-      final messages = await ApiService.pollSupportChat(chatId: chatId, afterId: _lastMessageId);
+      final messages = await ApiService.pollSupportChat(
+        chatId: chatId,
+        afterId: _lastMessageId,
+      );
       if (!mounted || messages.isEmpty) return;
       setState(() {
         _messages.addAll(messages);
-        _lastMessageId = _latestMessageId(messages);
+        _lastMessageId = _latestMessageId(_messages);
       });
       _scrollToBottom();
     } catch (_) {}
   }
 
   Future<void> _send() async {
-    final message = _inputController.text.trim();
+    final text = _inputController.text.trim();
     final chatId = (_chat?['id'] as num?)?.toInt();
-    if (message.isEmpty || chatId == null || _sending || _chat?['status'] == 'closed') return;
-    _inputController.clear();
+    if (text.isEmpty || chatId == null || _sending) return;
     setState(() => _sending = true);
     try {
-      await ApiService.sendSupportMessage(chatId: chatId, message: message);
-      await _poll();
+      final data = await ApiService.sendSupportMessage(
+        chatId: chatId,
+        message: text,
+      );
+      if (!mounted) return;
+      _inputController.clear();
+      final message = data['message'];
+      final autoReply = data['auto_reply'];
+      setState(() {
+        if (message != null) _messages.add(message);
+        if (autoReply != null) _messages.add(autoReply);
+        _lastMessageId = _latestMessageId(_messages);
+      });
+      _scrollToBottom();
     } on ApiException catch (e) {
-      if (mounted) _showMessage(e.message);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر إرسال الرسالة: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -103,66 +129,144 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) _scrollController.animateTo(_scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
     });
   }
 
-  void _showMessage(String message) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-
   @override
   Widget build(BuildContext context) {
-    final closed = _chat?['status'] == 'closed';
+    final closed = (_chat?['status']?.toString() ?? '') == 'closed';
     return Scaffold(
-      appBar: AppBar(title: const Text('الدعم والمحادثة'), actions: [IconButton(onPressed: () => _openChat(), icon: const Icon(Icons.refresh_rounded))]),
+      appBar: AppBar(title: const Text('الدعم الفني')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? _errorView()
-              : Column(children: [
-                  if (closed) _closedBanner(),
-                  Expanded(child: _messagesView()),
-                  _inputArea(closed),
-                ]),
+              : Column(
+                  children: [
+                    if (closed) _closedBanner(),
+                    Expanded(child: _messagesView()),
+                    _inputArea(closed),
+                  ],
+                ),
     );
   }
 
-  Widget _errorView() => Center(child: SingleChildScrollView(child: Padding(padding: const EdgeInsets.all(16), child: Column(mainAxisSize: MainAxisSize.min, children: [Text(_error!, style: const TextStyle(color: AppColors.red)), const SizedBox(height: 12), FilledButton(onPressed: _openChat, child: const Text('إعادة المحاولة'))])));
+  Widget _errorView() => Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _error!,
+                  style: const TextStyle(color: AppColors.red),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: _openChat,
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 
-  Widget _closedBanner() => Container(width: double.infinity, padding: const EdgeInsets.all(12), color: AppColors.gold.withOpacity(.12), child: Row(children: [const Icon(Icons.lock_outline_rounded, color: AppColors.gold, size: 18), const SizedBox(width: 8), const Expanded(child: Text('هذه المحادثة مغلقة', style: TextStyle(color: AppColors.gold, fontSize: 12))), TextButton(onPressed: () => _openChat(newChat: true), child: const Text('محادثة جديدة'))]));
+  Widget _closedBanner() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        color: AppColors.gold.withOpacity(.12),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_outline_rounded, color: AppColors.gold, size: 18),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'هذه المحادثة مغلقة',
+                style: TextStyle(color: AppColors.gold, fontSize: 12),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _openChat(newChat: true),
+              child: const Text('محادثة جديدة'),
+            ),
+          ],
+        ),
+      );
 
   Widget _messagesView() {
-    if (_messages.isEmpty) return Center(child: Text('ابدأ محادثتك مع فريق الدعم', style: TextStyle(color: AppColors.text2)));
+    if (_messages.isEmpty) {
+      return Center(
+        child: Text(
+          'ابدأ محادثتك مع فريق الدعم',
+          style: TextStyle(color: AppColors.text2),
+        ),
+      );
+    }
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final message = _messages[index];
-        final outgoing = message['sender_type'] == 'user';
-        final system = message['sender_type'] == 'system';
-        final color = outgoing ? AppColors.primary : AppColors.card2;
+        final isMine = message['sender_type']?.toString() == 'user';
+        final body = message['message']?.toString() ?? '';
         return Align(
-          alignment: outgoing ? Alignment.centerLeft : Alignment.centerRight,
+          alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 320),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * .82,
+            ),
             margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
-            decoration: BoxDecoration(color: system ? AppColors.gold.withOpacity(.12) : color, borderRadius: BorderRadius.circular(16), border: system ? Border.all(color: AppColors.gold.withOpacity(.25)) : null),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (!outgoing) Text(system ? 'النظام' : 'فريق الدعم', style: TextStyle(color: system ? AppColors.gold : AppColors.cyan, fontSize: 10, fontWeight: FontWeight.bold)), Text(message['message']?.toString() ?? '', style: TextStyle(color: system ? AppColors.gold : Colors.white, fontSize: 13, height: 1.4)), const SizedBox(height: 4), Text(message['created_at']?.toString() ?? '', style: TextStyle(color: outgoing ? Colors.white70 : AppColors.text3, fontSize: 9))]),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isMine ? AppColors.primary : AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(body),
           ),
         );
       },
     );
   }
 
-  Widget _inputArea(bool closed) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-        decoration: BoxDecoration(color: AppColors.card, border: Border(top: BorderSide(color: AppColors.border))),
-        child: Row(children: [Expanded(child: TextField(controller: _inputController, enabled: !closed && !_sending, minLines: 1, maxLines: 4, textInputAction: TextInputAction.newline, decoration: InputDecoration(hintText: closed ? 'المحادثة مغلقة' : 'اكتب رسالتك...', prefixIcon: const Icon(Icons.chat_bubble_outline_rounded)))), const SizedBox(width: 8), IconButton.filled(onPressed: closed || _sending ? null : _send, icon: _sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded))]),
-      ),
-    );
-  }
+  Widget _inputArea(bool closed) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _inputController,
+                  enabled: !closed && !_sending,
+                  minLines: 1,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: 'اكتب رسالتك...',
+                  ),
+                  onSubmitted: (_) => _send(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: closed || _sending ? null : _send,
+                icon: _sending
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send_rounded),
+              ),
+            ],
+          ),
+        ),
+      );
 }
