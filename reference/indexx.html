@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نجاز كارد</title>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    padding: 15px;
+    background: #f2f2f2;
+}
+
+.container {
+    max-width: 400px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+    margin-bottom: 15px;
+}
+
+input, textarea {
+    padding: 12px;
+    margin: 8px 0;
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+textarea {
+    height: 90px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.generate {background: #007bff; color: white;}
+.copy {background: #28a745; color: white;}
+.whatsapp {background: #25D366; color: white;}
+.extract {background: #ff9800; color: white;}
+.download {background: #6f42c1; color: white;}
+
+#result {
+    margin-top: 15px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#logo {
+    margin-top: 15px;
+    display: none;
+}
+
+#logo img {
+    width: 100px;
+    border-radius: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>نجاز كارد</h2>
+
+<textarea id="rawText" placeholder="الصق النص هنا..."></textarea>
+
+<button class="extract" onclick="extractData()">📥 استخراج تلقائي</button>
+
+<input type="text" id="name" placeholder="اسم العميل">
+<input type="number" id="account" placeholder="رقم الحساب">
+
+<button class="generate" onclick="generate()">إنشاء</button>
+
+<div id="result"></div>
+
+<div id="logo">
+    <img src="logo.png">
+</div>
+
+<button class="copy" onclick="copyText()">📋 نسخ الاسم</button>
+<button class="whatsapp" onclick="openWhatsApp()">📲 فتح واتساب</button>
+<button class="download" onclick="downloadLogo()">⬇️ تحميل الشعار</button>
+
+</div>
+
+<script>
+
+let finalText = "";
+
+// 🔥 استخراج ذكي + يمنع الكلمات الزائدة
+function extractData(){
+    let text = document.getElementById("rawText").value;
+
+    // تنظيف النص
+    text = text.replace(/\//g, " ").replace(/\s+/g, " ");
+
+    // رقم الحساب (3-6 أرقام)
+    let accountMatch = text.match(/\b\d{3,6}\b/);
+    let account = accountMatch ? accountMatch[0] : "";
+
+    // حذف الأرقام الطويلة (جوال)
+    let cleaned = text.replace(/\b\d{7,}\b/g, "");
+
+    // كلمات نوقف عندها
+    let stopWords = ["شحن", "تحويل", "ترحيل", "رصيد", "مفرق", "فعال", "غير"];
+
+    let words = cleaned.split(" ");
+    let nameParts = [];
+
+    for(let word of words){
+
+        // تجاهل الأرقام
+        if(/\d/.test(word)) continue;
+
+        // وقف عند كلمات معينة
+        if(stopWords.includes(word)) break;
+
+        // كلمات عربية فقط
+        if(/^[\u0600-\u06FF]+$/.test(word)){
+            nameParts.push(word);
+        }
+
+        // نكتفي بـ 5 كلمات
+        if(nameParts.length >= 5) break;
+    }
+
+    let name = nameParts.join(" ");
+
+    document.getElementById("account").value = account;
+    document.getElementById("name").value = name;
+}
+
+// إنشاء الاسم النهائي
+function generate(){
+    let name = document.getElementById("name").value;
+    let acc = document.getElementById("account").value;
+
+    if(name === "" || acc === ""){
+        alert("أدخل البيانات أولاً");
+        return;
+    }
+
+    finalText = acc + " (" + name + ") ✴️ نجاز كارد";
+
+    document.getElementById("result").innerText = finalText;
+    document.getElementById("logo").style.display = "block";
+}
+
+// نسخ
+function copyText(){
+    if(finalText === "") return alert("اضغط إنشاء أولاً");
+
+    navigator.clipboard.writeText(finalText);
+    alert("تم النسخ ✔️");
+}
+
+// واتساب
+function openWhatsApp(){
+    if(finalText === "") return alert("اضغط إنشاء أولاً");
+
+    let msg = encodeURIComponent(finalText);
+    window.open("https://wa.me/?text=" + msg, "_blank");
+}
+
+// تحميل الشعار
+function downloadLogo(){
+    let link = document.createElement("a");
+    link.href = "logo.png";
+    link.download = "njaz-logo.png";
+    link.click();
+}
+
+</script>
+
+</body>
+</html>

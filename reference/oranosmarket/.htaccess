@@ -1,0 +1,31 @@
+# =====================================================
+# .htaccess - يوجّه كل الطلبات (بكل المسارات والـ Query)
+# داخل هذا المجلد إلى index.php ليقوم بعملية البروكسي
+# =====================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # في حال كانت استضافتك تضع الهيدرز المخصصة (مثل api-token)
+    # في متغير Authorization بسبب إعدادات PHP-FPM/FastCGI،
+    # هذا السطر يضمن وصولها بشكل صحيح إلى PHP
+    RewriteCond %{HTTP:api-token} ^(.*)
+    RewriteRule .* - [E=HTTP_API_TOKEN:%{HTTP:api-token}]
+
+    # لا تُعِد التوجيه إذا كان الطلب لملف أو مجلد موجود فعليًا
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # كل شيء آخر يذهب إلى index.php مع الحفاظ على الـ Query String
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# السماح بإرسال واستقبال هيدرز مخصصة عبر PHP بدون قيود CORS افتراضية
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    Header always set Access-Control-Allow-Headers "*"
+</IfModule>
+
+# منع عرض قائمة الملفات داخل المجلد
+Options -Indexes

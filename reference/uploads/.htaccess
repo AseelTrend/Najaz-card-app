@@ -1,0 +1,22 @@
+# 🚫 منع تنفيذ أي ملفات PHP
+<FilesMatch "\.(php|php3|php4|php5|phtml)$">
+    Deny from all
+</FilesMatch>
+
+# 🚫 منع تنفيذ JavaScript
+<FilesMatch "\.(js)$">
+    Deny from all
+</FilesMatch>
+
+# 🚫 منع تنفيذ ملفات خطيرة
+<FilesMatch "\.(exe|sh|bat|py|pl)$">
+    Deny from all
+</FilesMatch>
+
+# 🔒 السماح فقط بالصور و PDF
+<FilesMatch "\.(jpg|jpeg|png|webp|gif|pdf)$">
+    Allow from all
+</FilesMatch>
+
+# 🚫 منع استعراض المجلد
+Options -Indexes
