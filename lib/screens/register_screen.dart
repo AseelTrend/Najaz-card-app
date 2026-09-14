@@ -18,7 +18,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _password2 = TextEditingController();
   final _referral = TextEditingController();
   bool _loading = false;
+  bool _obscurePassword = true;
   String? _error;
+
+  // قائمة الدول المعتمدة من الموقع
+  final List<Map<String, String>> _countries = const [
+    {'f': '🇸🇦', 'n': 'المملكة العربية السعودية', 'd': '+966'},
+    {'f': '🇦🇪', 'n': 'الإمارات العربية المتحدة', 'd': '+971'},
+    {'f': '🇰🇼', 'n': 'الكويت', 'd': '+965'},
+    {'f': '🇶🇦', 'n': 'قطر', 'd': '+974'},
+    {'f': '🇧🇭', 'n': 'البحرين', 'd': '+973'},
+    {'f': '🇴🇲', 'n': 'عُمان', 'd': '+968'},
+    {'f': '🇾🇲', 'n': 'اليمن', 'd': '+967'},
+    {'f': '🇮🇶', 'n': 'العراق', 'd': '+964'},
+    {'f': '🇸🇾', 'n': 'سوريا', 'd': '+963'},
+    {'f': '🇯🇴', 'n': 'الأردن', 'd': '+962'},
+    {'f': '🇱🇧', 'n': 'لبنان', 'd': '+961'},
+    {'f': '🇵🇸', 'n': 'فلسطين', 'd': '+970'},
+    {'f': '🇪🇬', 'n': 'مصر', 'd': '+20'},
+    {'f': '🇱🇾', 'n': 'ليبيا', 'd': '+218'},
+    {'f': '🇹🇳', 'n': 'تونس', 'd': '+216'},
+    {'f': '🇩🇿', 'n': 'الجزائر', 'd': '+213'},
+    {'f': '🇲🇦', 'n': 'المغرب', 'd': '+212'},
+    {'f': '🇸🇩', 'n': 'السودان', 'd': '+249'},
+    {'f': '🇹🇷', 'n': 'تركيا', 'd': '+90'},
+  ];
+
+  late Map<String, String> _selectedCountry;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCountry = _countries.first;
+  }
 
   Future<void> _submit() async {
     setState(() {
@@ -26,13 +58,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _error = null;
     });
     try {
+      final fullPhone = _selectedCountry['d']! + _phone.text.trim();
       await ApiService.register(
         username: _username.text.trim(),
         email: _email.text.trim(),
         password: _password.text,
         password2: _password2.text,
         fullName: _fullName.text.trim(),
-        phone: _phone.text.trim(),
+        phone: fullPhone,
         referralCode: _referral.text.trim(),
       );
       if (!mounted) return;
@@ -51,72 +84,239 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark;
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        title:  Text('إنشاء حساب', style: TextStyle(color: AppColors.text)),
-        iconTheme:  IconThemeData(color: AppColors.text),
+        centerTitle: true,
+        title: Text(
+          'إنشاء حساب جديد',
+          style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.text, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 8),
-                _field(_username, 'اسم المستخدم (إنجليزي وأرقام فقط)', Icons.person_outline_rounded),
-                const SizedBox(height: 14),
-                _field(_email, 'البريد الإلكتروني', Icons.email_outlined, keyboardType: TextInputType.emailAddress),
-                const SizedBox(height: 14),
-                _field(_fullName, 'الاسم الكامل', Icons.badge_outlined),
-                const SizedBox(height: 14),
-                _field(_phone, 'رقم الهاتف', Icons.phone_outlined, keyboardType: TextInputType.phone),
-                const SizedBox(height: 14),
-                _field(_password, 'كلمة المرور', Icons.lock_outline_rounded, obscure: true),
-                const SizedBox(height: 14),
-                _field(_password2, 'تأكيد كلمة المرور', Icons.lock_outline_rounded, obscure: true),
-                const SizedBox(height: 14),
-                _field(_referral, 'كود الإحالة (اختياري)', Icons.card_giftcard_outlined),
-                if (_error != null) ...[
-                  const SizedBox(height: 14),
-                  Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // بطاقة التسجيل
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppColors.border, width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.04),
+                      blurRadius: 30,
+                      offset: const Offset(0, 15),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _field(
+                      controller: _username,
+                      label: 'اسم المستخدم (إنجليزي وأرقام)',
+                      icon: Icons.person_outline_rounded,
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      controller: _email,
+                      label: 'البريد الإلكتروني',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      controller: _fullName,
+                      label: 'الاسم الكامل',
+                      icon: Icons.badge_outlined,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // حقل الهاتف مع اختيار الدولة
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _countryPicker(),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _field(
+                            controller: _phone,
+                            label: 'رقم الهاتف',
+                            icon: Icons.phone_outlined,
+                            keyboardType: TextInputType.phone,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+                    _field(
+                      controller: _password,
+                      label: 'كلمة المرور',
+                      icon: Icons.lock_outline_rounded,
+                      obscure: _obscurePassword,
+                      isPassword: true,
+                      onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      controller: _password2,
+                      label: 'تأكيد كلمة المرور',
+                      icon: Icons.lock_reset_rounded,
+                      obscure: _obscurePassword,
+                    ),
+                    const SizedBox(height: 16),
+                    _field(
+                      controller: _referral,
+                      label: 'كود الإحالة (اختياري)',
+                      icon: Icons.card_giftcard_outlined,
+                    ),
+
+                    if (_error != null) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.red.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.red.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline_rounded, color: AppColors.red, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(_error!, style: const TextStyle(color: AppColors.red, fontSize: 12.5, fontWeight: FontWeight.w600)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 28),
+                    _gradientButton(
+                      label: 'إنشاء الحساب',
+                      loading: _loading,
+                      onPressed: _submit,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('لديك حساب بالفعل؟', style: TextStyle(color: AppColors.text2, fontSize: 13.5)),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('تسجيل الدخول', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  ),
                 ],
-                const SizedBox(height: 24),
-                _gradientButton(label: 'إنشاء الحساب', loading: _loading, onPressed: _submit),
-                const SizedBox(height: 24),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _countryPicker() {
+    return GestureDetector(
+      onTap: _showCountrySheet,
+      child: Container(
+        height: 58,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.card2,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_selectedCountry['f']!, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 6),
+            Text(
+              _selectedCountry['d']!,
+              style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            Icon(Icons.arrow_drop_down_rounded, color: AppColors.text2),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCountrySheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bg,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (context) => Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 20),
+          Text('اختر الدولة', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _countries.length,
+              itemBuilder: (context, i) {
+                final c = _countries[i];
+                final isSelected = _selectedCountry['d'] == c['d'];
+                return ListTile(
+                  onTap: () {
+                    setState(() => _selectedCountry = c);
+                    Navigator.pop(context);
+                  },
+                  leading: Text(c['f']!, style: const TextStyle(fontSize: 24)),
+                  title: Text(c['n']!, style: TextStyle(color: AppColors.text, fontSize: 14)),
+                  trailing: Text(c['d']!, style: TextStyle(color: AppColors.text2, fontWeight: FontWeight.bold)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  selected: isSelected,
+                  selectedTileColor: AppColors.primary.withOpacity(0.08),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _gradientButton({required String label, required bool loading, required VoidCallback onPressed}) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: AppColors.balanceGradient,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: AppColors.accentPurple.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6)),
+          BoxShadow(color: AppColors.accentPurple.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8)),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           onTap: loading ? null : onPressed,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Center(
               child: loading
-                  ? const SizedBox(
-                      height: 20, width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : Text(label, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
+                  ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                  : Text(label, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ),
@@ -124,27 +324,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _field(TextEditingController c, String label, IconData icon,
-      {bool obscure = false, TextInputType? keyboardType}) {
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscure = false,
+    bool isPassword = false,
+    TextInputType? keyboardType,
+    VoidCallback? onToggleObscure,
+  }) {
     return TextField(
-      controller: c,
+      controller: controller,
       obscureText: obscure,
       keyboardType: keyboardType,
-      style:  TextStyle(color: AppColors.text),
+      style: TextStyle(color: AppColors.text, fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle:  TextStyle(color: AppColors.text2),
-        prefixIcon: Icon(icon, color: AppColors.text2),
+        labelStyle: TextStyle(color: AppColors.text2, fontSize: 13),
+        prefixIcon: Icon(icon, color: AppColors.text2, size: 20),
+        suffixIcon: isPassword
+            ? IconButton(
+                onPressed: onToggleObscure,
+                icon: Icon(
+                  obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: AppColors.text2,
+                  size: 20,
+                ),
+                splashRadius: 20,
+              )
+            : null,
         filled: true,
         fillColor: AppColors.card2,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
