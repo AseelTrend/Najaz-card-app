@@ -65,7 +65,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
 
   int _latestMessageId(List<dynamic> messages) {
     if (messages.isEmpty) return 0;
-    return (messages.last['id'] as num?)?.toInt() ?? 0;
+    return int.tryParse(messages.last['id']?.toString() ?? '') ?? 0;
   }
 
   void _startPolling() {
