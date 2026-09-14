@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
@@ -11,6 +13,28 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+class _BannerData {
+  final String title;
+  final String subtitle;
+  final String tag;
+  final IconData icon;
+  final List<Color> colors;
+  final Color textColor;
+  final Color accentColor;
+  final String imageUrl;
+
+  const _BannerData({
+    required this.title,
+    required this.subtitle,
+    required this.tag,
+    required this.icon,
+    required this.colors,
+    this.textColor = Colors.white,
+    this.accentColor = AppColors.cyan,
+    this.imageUrl = '',
+  });
+}
+
 class _LoginScreenState extends State<LoginScreen> {
   final _loginCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -19,6 +43,75 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _need2fa = false;
   bool _obscurePassword = true;
   String? _error;
+
+  final PageController _bannerController = PageController();
+  Timer? _bannerTimer;
+  int _bannerIndex = 0;
+  List<_BannerData> _banners = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBanners();
+    _startBannerTimer();
+  }
+
+  @override
+  void dispose() {
+    _bannerTimer?.cancel();
+    _bannerController.dispose();
+    _loginCtrl.dispose();
+    _passCtrl.dispose();
+    _totpCtrl.dispose();
+    super.dispose();
+  }
+
+  void _startBannerTimer() {
+    _bannerTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!_bannerController.hasClients) return;
+      final bannerCount = _banners.isEmpty ? 3 : _banners.length;
+      final next = (_bannerIndex + 1) % bannerCount;
+      _bannerController.animateToPage(next, duration: const Duration(milliseconds: 450), curve: Curves.easeOutCubic);
+    });
+  }
+
+  Future<void> _loadBanners() async {
+    try {
+      final banners = await ApiService.getBanners();
+      if (!mounted || banners.isEmpty) return;
+      setState(() => _banners = banners.map(_bannerFromApi).toList());
+    } catch (_) {}
+  }
+
+  _BannerData _bannerFromApi(dynamic raw) {
+    final banner = Map<String, dynamic>.from(raw as Map);
+    final bg = _gradientColors(banner['bg_color']?.toString());
+    return _BannerData(
+      title: banner['title']?.toString() ?? '',
+      subtitle: banner['subtitle']?.toString() ?? '',
+      tag: banner['tag']?.toString() ?? '',
+      icon: Icons.campaign_rounded,
+      colors: bg,
+      textColor: _parseColor(banner['text_color']?.toString(), Colors.white),
+      accentColor: _parseColor(banner['accent_color']?.toString(), AppColors.cyan),
+      imageUrl: banner['image_url']?.toString() ?? '',
+    );
+  }
+
+  List<Color> _gradientColors(String? value) {
+    final matches = RegExp(r'#[0-9a-fA-F]{6,8}').allMatches(value ?? '').map((match) => _parseColor(match.group(0), AppColors.primary)).toList();
+    if (matches.length >= 2) return matches.take(2).toList();
+    if (matches.length == 1) return [matches.first, AppColors.bg2];
+    return const [AppColors.primary, AppColors.primaryDark];
+  }
+
+  Color _parseColor(String? value, Color fallback) {
+    if (value == null) return fallback;
+    final hex = value.replaceFirst('#', '');
+    final normalized = hex.length == 6 ? 'FF$hex' : hex;
+    final parsed = int.tryParse(normalized, radix: 16);
+    return parsed == null ? fallback : Color(parsed);
+  }
 
   Future<void> _submit() async {
     if (_loginCtrl.text.trim().isEmpty || _passCtrl.text.isEmpty) {
@@ -156,33 +249,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const Spacer(),
 
-                        // شعار التطبيق المطور
-                        Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.primary.withOpacity(0.12), width: 2),
-                            ),
-                            child: Container(
-                              width: 86,
-                              height: 86,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                gradient: AppColors.balanceGradient,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.accentPurple.withOpacity(0.35),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 44),
-                            ),
-                          ),
-                        ),
+                        // سلايدر الإعلانات المطور (بدلاً من الأيقونة)
+                        _buildBannerSlider(),
                         const SizedBox(height: 24),
 
                         // نصوص الترحيب
@@ -332,6 +400,141 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  Widget _buildBannerSlider() {
+    final banners = _banners.isEmpty ? const [
+      _BannerData(
+        title: 'كروت الشبكات',
+        subtitle: 'صارت في الجيب',
+        tag: 'متوفر الآن',
+        icon: Icons.router_rounded,
+        colors: [Color(0xFF123A77), Color(0xFF071B3D)],
+      ),
+      _BannerData(
+        title: 'اشحن ألعابك',
+        subtitle: 'بطاقات رقمية بأسعار مميزة',
+        tag: 'عروض رقمية',
+        icon: Icons.sports_esports_rounded,
+        colors: [Color(0xFF3B226D), Color(0xFF171033)],
+      ),
+      _BannerData(
+        title: 'رصيدك جاهز',
+        subtitle: 'شحن سريع وآمن من محفظتك',
+        tag: 'نجاز كارد بلاس',
+        icon: Icons.account_balance_wallet_rounded,
+        colors: [Color(0xFF075C5D), Color(0xFF062B3D)],
+      ),
+    ] : _banners;
+    return Container(
+      height: 148,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _bannerController,
+            itemCount: banners.length,
+            onPageChanged: (index) => setState(() => _bannerIndex = index),
+            itemBuilder: (context, index) => _buildBannerSlide(banners[index]),
+          ),
+          Positioned(
+            bottom: 11,
+            left: 0,
+            right: 0,
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(banners.length, (index) {
+              final active = _bannerIndex == index;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: active ? 20 : 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(color: active ? Colors.white : Colors.white38, borderRadius: BorderRadius.circular(6)),
+              );
+            })),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBannerSlide(_BannerData banner) {
+    if (banner.imageUrl.isNotEmpty) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          CachedNetworkImage(
+            imageUrl: banner.imageUrl,
+            fit: BoxFit.cover,
+            errorWidget: (_, __, ___) => _bannerFallbackCard(banner),
+          ),
+          if (banner.title.isNotEmpty)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0xB3000000), Colors.transparent],
+                  stops: [0.0, 0.55],
+                ),
+              ),
+            ),
+          if (banner.title.isNotEmpty)
+            Positioned(
+              right: 16,
+              left: 16,
+              bottom: 14,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(banner.title, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor, fontSize: 15, fontWeight: FontWeight.bold)),
+                  if (banner.subtitle.isNotEmpty)
+                    Text(banner.subtitle, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor.withOpacity(.85), fontSize: 11)),
+                ],
+              ),
+            ),
+        ],
+      );
+    }
+    return _bannerFallbackCard(banner);
+  }
+
+  Widget _bannerFallbackCard(_BannerData banner) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 18, 22),
+      decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: banner.colors)),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (banner.tag.isNotEmpty) Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4), decoration: BoxDecoration(color: banner.accentColor.withOpacity(.2), borderRadius: BorderRadius.circular(20)), child: Text(banner.tag, style: TextStyle(color: banner.accentColor, fontSize: 10, fontWeight: FontWeight.bold))),
+                const SizedBox(height: 8),
+                Text(banner.title, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor, fontSize: 19, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 3),
+                Text(banner.subtitle, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor.withOpacity(.72), fontSize: 12)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          _bannerIcon(banner),
+        ],
+      ),
+    );
+  }
+
+  Widget _bannerIcon(_BannerData banner) => Container(width: 68, height: 68, decoration: BoxDecoration(color: banner.textColor.withOpacity(.13), shape: BoxShape.circle, border: Border.all(color: banner.textColor.withOpacity(.2))), child: Icon(banner.icon, color: banner.accentColor, size: 32));
 
   Widget _gradientButton({required String label, required bool loading, required VoidCallback onPressed}) {
     return Container(
