@@ -130,8 +130,16 @@ class _LoginScreenState extends State<LoginScreen> {
         (route) => false,
       );
     } on GoogleSignInException catch (e) {
-      if (e.code == GoogleSignInExceptionCode.canceled) return;
-      setState(() => _error = 'تعذر تسجيل الدخول عبر Google، حاول مرة أخرى');
+      final description = e.description?.trim();
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        setState(() => _error = description?.isNotEmpty == true
+            ? 'تعذر إكمال تسجيل الدخول عبر Google: $description'
+            : 'تعذر إكمال تسجيل الدخول عبر Google. تحقق من إعدادات Google للتطبيق ثم حاول مرة أخرى');
+      } else {
+        setState(() => _error = description?.isNotEmpty == true
+            ? 'Google: ${e.code}\n$description'
+            : 'تعذر تسجيل الدخول عبر Google، حاول مرة أخرى');
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
