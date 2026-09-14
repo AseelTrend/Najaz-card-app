@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +30,6 @@ class _BannerData {
     required this.subtitle,
     required this.tag,
     required this.icon,
-    required this.colors,
     this.textColor = Colors.white,
     this.accentColor = AppColors.cyan,
     this.imageUrl = '',
@@ -113,6 +114,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return parsed == null ? fallback : Color(parsed);
   }
 
+  Future<void> _openGoogleAuth() async {
+    final uri = Uri.parse('https://njaz.net/auth/google/redirect.php');
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      setState(() => _error = 'تعذر فتح تسجيل الدخول عبر Google');
+    }
+  }
+
   Future<void> _submit() async {
     if (_loginCtrl.text.trim().isEmpty || _passCtrl.text.isEmpty) {
       setState(() => _error = 'أدخل اسم المستخدم وكلمة المرور');
@@ -156,7 +165,6 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.bg,
       body: Stack(
         children: [
-          // ── الخلفية المزخرفة (أوراب ضوئية ناعمة) ──
           Positioned(
             top: -100,
             right: -80,
@@ -193,8 +201,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
-          // ── المحتوى الرئيسي ──
           SafeArea(
             child: CustomScrollView(
               slivers: [
@@ -205,7 +211,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // زر تبديل الوضع الليلي والنهاري في الأعلى
                         Align(
                           alignment: Alignment.topLeft,
                           child: Material(
@@ -246,37 +251,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-
                         const Spacer(),
-
-                        // سلايدر الإعلانات المطور (بدلاً من الأيقونة)
                         _buildBannerSlider(),
                         const SizedBox(height: 24),
-
-                        // نصوص الترحيب
                         Text(
                           'تسجيل الدخول',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.text,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
+                          style: TextStyle(color: AppColors.text, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: -0.5),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'مرحباً بعودتك 👋 سجّل دخولك للوصول إلى حسابك',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.text2,
-                            fontSize: 13.5,
-                            height: 1.4,
-                          ),
+                          style: TextStyle(color: AppColors.text2, fontSize: 13.5, height: 1.4),
                         ),
                         const SizedBox(height: 32),
-
-                        // بطاقة إدخال البيانات المحدثة بالكامل
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
@@ -294,97 +283,60 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _field(
-                                controller: _loginCtrl,
-                                label: 'اسم المستخدم أو البريد الإلكتروني',
-                                icon: Icons.person_outline_rounded,
-                              ),
+                              _field(controller: _loginCtrl, label: 'اسم المستخدم أو البريد الإلكتروني', icon: Icons.person_outline_rounded),
                               const SizedBox(height: 16),
-                              _field(
-                                controller: _passCtrl,
-                                label: 'كلمة المرور',
-                                icon: Icons.lock_outline_rounded,
-                                obscure: _obscurePassword,
-                                isPassword: true,
-                                onToggleObscure: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
+                              _field(controller: _passCtrl, label: 'كلمة المرور', icon: Icons.lock_outline_rounded, obscure: _obscurePassword, isPassword: true, onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword)),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton(
+                                  onPressed: _loading ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+                                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4)),
+                                  child: const Text('نسيت كلمة المرور؟', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                                ),
                               ),
                               if (_need2fa) ...[
-                                const SizedBox(height: 16),
-                                _field(
-                                  controller: _totpCtrl,
-                                  label: 'رمز المصادقة الثنائية',
-                                  icon: Icons.security_rounded,
-                                  keyboardType: TextInputType.number,
-                                ),
+                                const SizedBox(height: 8),
+                                _field(controller: _totpCtrl, label: 'رمز المصادقة الثنائية', icon: Icons.security_rounded, keyboardType: TextInputType.number),
                               ],
                               if (_error != null) ...[
                                 const SizedBox(height: 16),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.red.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: AppColors.red.withOpacity(0.25)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.error_outline_rounded, color: AppColors.red, size: 20),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          _error!,
-                                          style: const TextStyle(
-                                            color: AppColors.red,
-                                            fontSize: 12.5,
-                                            height: 1.4,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  decoration: BoxDecoration(color: AppColors.red.withOpacity(0.08), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.red.withOpacity(0.25))),
+                                  child: Row(children: [
+                                    const Icon(Icons.error_outline_rounded, color: AppColors.red, size: 20),
+                                    const SizedBox(width: 10),
+                                    Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.red, fontSize: 12.5, height: 1.4, fontWeight: FontWeight.w600))),
+                                  ]),
                                 ),
                               ],
                               const SizedBox(height: 24),
-                              _gradientButton(
-                                label: 'دخول',
-                                loading: _loading,
-                                onPressed: _submit,
+                              _gradientButton(label: 'دخول', loading: _loading, onPressed: _submit),
+                              const SizedBox(height: 14),
+                              OutlinedButton.icon(
+                                onPressed: _loading ? null : _openGoogleAuth,
+                                icon: const Icon(Icons.account_circle_outlined),
+                                label: const Text('تسجيل الدخول باستخدام Google'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.text,
+                                  side: BorderSide(color: AppColors.border),
+                                  minimumSize: const Size.fromHeight(52),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                ),
                               ),
                             ],
                           ),
                         ),
-
                         const Spacer(),
                         const SizedBox(height: 24),
-
-                        // رابط إنشاء حساب جديد منسق
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              'ليس لديك حساب؟',
-                              style: TextStyle(color: AppColors.text2, fontSize: 13.5),
-                            ),
+                            Text('ليس لديك حساب؟', style: TextStyle(color: AppColors.text2, fontSize: 13.5)),
                             TextButton(
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                              ),
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                              child: const Text(
-                                'إنشاء حساب جديد',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13.5,
-                                ),
-                              ),
+                              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
+                              child: const Text('إنشاء حساب جديد', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13.5)),
                             ),
                           ],
                         ),
@@ -403,63 +355,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildBannerSlider() {
     final banners = _banners.isEmpty ? const [
-      _BannerData(
-        title: 'كروت الشبكات',
-        subtitle: 'صارت في الجيب',
-        tag: 'متوفر الآن',
-        icon: Icons.router_rounded,
-        colors: [Color(0xFF123A77), Color(0xFF071B3D)],
-      ),
-      _BannerData(
-        title: 'اشحن ألعابك',
-        subtitle: 'بطاقات رقمية بأسعار مميزة',
-        tag: 'عروض رقمية',
-        icon: Icons.sports_esports_rounded,
-        colors: [Color(0xFF3B226D), Color(0xFF171033)],
-      ),
-      _BannerData(
-        title: 'رصيدك جاهز',
-        subtitle: 'شحن سريع وآمن من محفظتك',
-        tag: 'نجاز كارد بلاس',
-        icon: Icons.account_balance_wallet_rounded,
-        colors: [Color(0xFF075C5D), Color(0xFF062B3D)],
-      ),
+      _BannerData(title: 'كروت الشبكات', subtitle: 'صارت في الجيب', tag: 'متوفر الآن', icon: Icons.router_rounded, colors: [Color(0xFF123A77), Color(0xFF071B3D)]),
+      _BannerData(title: 'اشحن ألعابك', subtitle: 'بطاقات رقمية بأسعار مميزة', tag: 'عروض رقمية', icon: Icons.sports_esports_rounded, colors: [Color(0xFF3B226D), Color(0xFF171033)]),
+      _BannerData(title: 'رصيدك جاهز', subtitle: 'شحن سريع وآمن من محفظتك', tag: 'نجاز كارد بلاس', icon: Icons.account_balance_wallet_rounded, colors: [Color(0xFF075C5D), Color(0xFF062B3D)]),
     ] : _banners;
     return Container(
       height: 148,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 8))]),
       child: Stack(
         children: [
-          PageView.builder(
-            controller: _bannerController,
-            itemCount: banners.length,
-            onPageChanged: (index) => setState(() => _bannerIndex = index),
-            itemBuilder: (context, index) => _buildBannerSlide(banners[index]),
-          ),
+          PageView.builder(controller: _bannerController, itemCount: banners.length, onPageChanged: (index) => setState(() => _bannerIndex = index), itemBuilder: (context, index) => _buildBannerSlide(banners[index])),
           Positioned(
             bottom: 11,
             left: 0,
             right: 0,
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(banners.length, (index) {
               final active = _bannerIndex == index;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: active ? 20 : 6,
-                height: 6,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                decoration: BoxDecoration(color: active ? Colors.white : Colors.white38, borderRadius: BorderRadius.circular(6)),
-              );
+              return AnimatedContainer(duration: const Duration(milliseconds: 220), width: active ? 20 : 6, height: 6, margin: const EdgeInsets.symmetric(horizontal: 3), decoration: BoxDecoration(color: active ? Colors.white : Colors.white38, borderRadius: BorderRadius.circular(6)));
             })),
           ),
         ],
@@ -472,22 +385,8 @@ class _LoginScreenState extends State<LoginScreen> {
       return Stack(
         fit: StackFit.expand,
         children: [
-          CachedNetworkImage(
-            imageUrl: banner.imageUrl,
-            fit: BoxFit.cover,
-            errorWidget: (_, __, ___) => _bannerFallbackCard(banner),
-          ),
-          if (banner.title.isNotEmpty)
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Color(0xB3000000), Colors.transparent],
-                  stops: [0.0, 0.55],
-                ),
-              ),
-            ),
+          CachedNetworkImage(imageUrl: banner.imageUrl, fit: BoxFit.cover, errorWidget: (_, __, ___) => _bannerFallbackCard(banner)),
+          if (banner.title.isNotEmpty) Container(decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Color(0xB3000000), Colors.transparent], stops: [0.0, 0.55]))),
           if (banner.title.isNotEmpty)
             Positioned(
               right: 16,
@@ -497,8 +396,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(banner.title, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor, fontSize: 15, fontWeight: FontWeight.bold)),
-                  if (banner.subtitle.isNotEmpty)
-                    Text(banner.subtitle, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor.withOpacity(.85), fontSize: 11)),
+                  if (banner.subtitle.isNotEmpty) Text(banner.subtitle, textAlign: TextAlign.right, style: TextStyle(color: banner.textColor.withOpacity(.85), fontSize: 11)),
                 ],
               ),
             ),
@@ -538,17 +436,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _gradientButton({required String label, required bool loading, required VoidCallback onPressed}) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: AppColors.balanceGradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accentPurple.withOpacity(0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(gradient: AppColors.balanceGradient, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: AppColors.accentPurple.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))]),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -558,23 +446,8 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Center(
               child: loading
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                  ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                  : Text(label, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
             ),
           ),
         ),
@@ -582,15 +455,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscure = false,
-    bool isPassword = false,
-    TextInputType? keyboardType,
-    VoidCallback? onToggleObscure,
-  }) {
+  Widget _field({required TextEditingController controller, required String label, required IconData icon, bool obscure = false, bool isPassword = false, TextInputType? keyboardType, VoidCallback? onToggleObscure}) {
     return TextField(
       controller: controller,
       obscureText: obscure,
@@ -600,31 +465,12 @@ class _LoginScreenState extends State<LoginScreen> {
         labelText: label,
         labelStyle: TextStyle(color: AppColors.text2, fontSize: 13),
         prefixIcon: Icon(icon, color: AppColors.text2, size: 20),
-        suffixIcon: isPassword
-            ? IconButton(
-                onPressed: onToggleObscure,
-                icon: Icon(
-                  obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: AppColors.text2,
-                  size: 20,
-                ),
-                splashRadius: 20,
-              )
-            : null,
+        suffixIcon: isPassword ? IconButton(onPressed: onToggleObscure, icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.text2, size: 20), splashRadius: 20) : null,
         filled: true,
         fillColor: AppColors.card2,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
