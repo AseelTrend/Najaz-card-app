@@ -45,9 +45,12 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
     try {
       final data = await ApiService.openSupportChat(newChat: newChat);
       if (!mounted) return;
-      final messages = (data['messages'] as List<dynamic>?) ?? [];
+      final rawMessages = data['messages'];
+      final messages = rawMessages is List ? List<dynamic>.from(rawMessages) : <dynamic>[];
+      final rawChat = data['chat'];
+      final chat = rawChat is Map ? Map<String, dynamic>.from(rawChat) : null;
       setState(() {
-        _chat = data['chat'] as Map<String, dynamic>?;
+        _chat = chat;
         _messages = messages;
         _lastMessageId = _latestMessageId(messages);
       });
@@ -65,9 +68,14 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
   }
 
   int _latestMessageId(List<dynamic> messages) {
-    if (messages.isEmpty) return 0;
-    final rawId = messages.last['id'];
-    return int.tryParse(rawId.toString()) ?? 0;
+    var latest = 0;
+    for (final item in messages) {
+      if (item is Map) {
+        final id = int.tryParse(item['id']?.toString() ?? '') ?? 0;
+        if (id > latest) latest = id;
+      }
+    }
+    return latest;
   }
 
   void _startPolling() {
@@ -85,9 +93,20 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
         afterId: _lastMessageId,
       );
       if (!mounted || messages.isEmpty) return;
+      final newMessages = <dynamic>[];
+      var latestId = _lastMessageId;
+      for (final item in messages) {
+        if (item is Map) {
+          final id = int.tryParse(item['id']?.toString() ?? '') ?? 0;
+          if (id <= _lastMessageId) continue;
+          newMessages.add(item);
+          if (id > latestId) latestId = id;
+        }
+      }
+      if (newMessages.isEmpty) return;
       setState(() {
-        _messages.addAll(messages);
-        _lastMessageId = _latestMessageId(_messages);
+        _messages.addAll(newMessages);
+        _lastMessageId = latestId;
       });
       _scrollToBottom();
     } catch (_) {}
@@ -108,8 +127,13 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
       _inputController.clear();
       final message = data['message'];
       setState(() {
-        if (message is Map<String, dynamic>) _messages.add(message);
-        _lastMessageId = _latestMessageId(_messages);
+        if (message is Map<String, dynamic>) {
+          final id = int.tryParse(message['id']?.toString() ?? '') ?? 0;
+          if (id > _lastMessageId) {
+            _messages.add(message);
+            _lastMessageId = id;
+          }
+        }
       });
       _scrollToBottom();
     } on ApiException catch (e) {
@@ -558,7 +582,7 @@ class _SupportChatScreenState extends State<SupportChatScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(
+              IconButton.filled(
                 onPressed: closed || _sending ? null : _send,
                 icon: _sending
                     ? const SizedBox(
