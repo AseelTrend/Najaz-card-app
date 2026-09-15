@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
-import 'kyc_screen.dart';
 
-// [UI PORT] شاشة إعدادات منفصلة — منقولة من قسم "حسابي": المنطقة الزمنية
-// والأجهزة المصرّح بها بالدخول، مع إضافة دعم تصريح الأجهزة الجديدة (الحالة
-// "بانتظار التصريح") كما بصفحة إعدادات الحساب بالموقع، إلى جانب حظر أي
-// جهاز غير أساسي كالسابق.
+// [UI PORT] شاشة إعدادات منفصلة — المنطقة الزمنية والأجهزة المصرّح بها بالدخول،
+// مع دعم تصريح الأجهزة الجديدة (الحالة "بانتظار التصريح") وحظر الأجهزة غير الأساسية.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
   @override
@@ -56,15 +53,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text('الإعدادات'), actions: [IconButton(tooltip: 'تحديث الأجهزة', onPressed: _refreshing ? null : () => _load(manual: true), icon: _refreshing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)) : const Icon(Icons.refresh_rounded))]),
       body: RefreshIndicator(onRefresh: () => _load(manual: true), color: AppColors.primary, backgroundColor: AppColors.card, child: _loading ? const Center(child: CircularProgressIndicator(color: AppColors.primary)) : ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 28), children: [
         if (_error != null) _messageBox(_error!),
-        _kycEntry(),
-        const SizedBox(height: 18),
         _sectionTitle('المنطقة الزمنية'), _timezoneCard(), const SizedBox(height: 18),
         _devicesSectionHeader(), _devicesCard(),
       ]),),
     );
   }
-
-  Widget _kycEntry() => Container(decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)), child: InkWell(borderRadius: BorderRadius.circular(20), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const KycScreen())), child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [Container(width: 40, height: 40, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.primary.withOpacity(.15), borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.verified_user_rounded, color: AppColors.primary, size: 20)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('تحقق من الهوية', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)), const SizedBox(height: 3), Text('إثبات هويتك لفتح المزيد من المميزات', style: TextStyle(color: AppColors.text2, fontSize: 10.5))])), Icon(Icons.chevron_left_rounded, color: AppColors.text2, size: 20)]))));
 
   Widget _timezoneCard() => Container(decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)), child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.gold.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.schedule_rounded, color: AppColors.gold, size: 18)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('توقيت التطبيق', style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text('توقيت تسجيل الحركات وسجل الطلبات', style: TextStyle(color: AppColors.text2, fontSize: 10.5))])), const SizedBox(width: 8), DropdownButton<String>(value: _timezone, underline: const SizedBox.shrink(), dropdownColor: AppColors.card2, style: TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold), items: const [DropdownMenuItem(value: '3', child: Text('UTC+3 اليمن')), DropdownMenuItem(value: '2', child: Text('UTC+2 مصر/الشام')), DropdownMenuItem(value: '4', child: Text('UTC+4 الإمارات')), DropdownMenuItem(value: '0', child: Text('UTC+0 غرينتش'))], onChanged: (value) { if (value == null) return; setState(() => _timezone = value); _saveTimezone(value); })])));
 
