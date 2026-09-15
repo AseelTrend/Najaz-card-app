@@ -4,47 +4,388 @@ import '../services/telecom_api_service.dart';
 import '../theme/app_colors.dart';
 
 class TelecomTopupScreen extends StatefulWidget {
-  final int categoryId; final String categoryName;
-  const TelecomTopupScreen({super.key,required this.categoryId,required this.categoryName});
-  @override State<TelecomTopupScreen> createState()=>_TelecomTopupScreenState();
+  final int categoryId;
+  final String categoryName;
+  const TelecomTopupScreen({super.key, required this.categoryId, required this.categoryName});
+  @override
+  State<TelecomTopupScreen> createState() => _TelecomTopupScreenState();
 }
-class _TelecomTopupScreenState extends State<TelecomTopupScreen>{
-  final phone=TextEditingController(),amount=TextEditingController(); Timer? timer;
-  Map<String,dynamic>? network,result,selected; List<dynamic> bunches=[];
-  String? tab,openGroup,error; bool detecting=false,checking=false,paying=false;
-  String get number=>phone.text.replaceAll(RegExp(r'[^0-9]'),'');
-  int get networkId=>int.tryParse('${network?['id']??network?['method_id']??0}')??0;
-  @override void dispose(){timer?.cancel();phone.dispose();amount.dispose();super.dispose();}
-  void changed(String v){timer?.cancel();setState((){network=null;result=null;selected=null;bunches=[];tab=null;openGroup=null;error=null;});final p=v.replaceAll(RegExp(r'[^0-9]'),'');if(p.length>=8)timer=Timer(const Duration(milliseconds:350),()=>detect(p));}
-  Future<void> detect(String p)async{setState(()=>detecting=true);try{final d=await TelecomApiService.detectNetwork(p);if(!mounted)return;final x=d['network'];network=x is Map?Map<String,dynamic>.from(x):null;if(networkId>0)bunches=await TelecomApiService.bunches(networkId);setState((){});}catch(e){if(mounted)setState(()=>error=e.toString());}finally{if(mounted)setState(()=>detecting=false);}}
-  Future<void> checkNumber()async{if(number.length<7||networkId<=0){setState(()=>error='أدخل رقم الهاتف أولاً');return;}setState((){checking=true;error=null;});try{final d=await TelecomApiService.checkService(phone:number,networkId:networkId);if(!mounted)return;final x=d['data'];result=x is Map?Map<String,dynamic>.from(x):d;setState((){});}catch(e){if(mounted)setState(()=>error=e.toString());}finally{if(mounted)setState(()=>checking=false);}}
-  void selectTab(String v){setState((){tab=tab==v?null:v;openGroup=null;error=null;if(v=='amount'||tab==null)selected=null;});}
-  double price(Map b)=>double.tryParse('${b['price']??b['amount']??0}')??0;
-  String priceText(Map b){final p=price(b);return '${p==p.roundToDouble()?p.toInt():p} ر.ي';}
-  String name(Map b)=>'${b['bunch_name']??b['name']??b['title']??'خدمة شحن'}';
-  String valid(Map b)=>'${b['validity']??b['duration']??b['period']??''}';
-  String validity(Map b)=>valid(b);
-  String id(Map b)=>'${b['unified_code']??b['bunch_id']??b['id']??''}';
-  List<Map<String,dynamic>> items(String type){final r=<Map<String,dynamic>>[];for(final x in bunches){if(x is! Map)continue;final b=Map<String,dynamic>.from(x),s='${b['section']??''}';if(type=='fees'&&s=='fees')r.add(b);if(type=='bundles'&&s!='fees'&&s!='amount')r.add(b);}return r;}
-  Map<String,List<Map<String,dynamic>>> groups(List<Map<String,dynamic>> xs,String type){final r=<String,List<Map<String,dynamic>>>{};for(final b in xs){final g='${b['bundle_group']??''}'.trim();final s='${b['section']??''}';r.putIfAbsent(g.isEmpty?(type=='fees'?'الفئات والرسوم':s.isEmpty?'الباقات':s):g,()=>[]).add(b);}return r;}
-  Future<void> payAmount()async{final a=double.tryParse(amount.text.replaceAll(',','').trim())??0;if(number.length<7||networkId<=0){setState(()=>error='رقم الهاتف غير صحيح');return;}if(a<=0){setState(()=>error='أدخل مبلغ الشحن');return;}setState((){paying=true;error=null;});try{final d=await TelecomApiService.payBalance(phone:number,networkId:networkId,amountYer:a);if(mounted)await success(d);}catch(e){if(mounted)setState(()=>error=e.toString());}finally{if(mounted)setState(()=>paying=false);}}
-  Future<void> paySelected()async{final b=selected;if(b==null||id(b).isEmpty||price(b)<=0){setState(()=>error='اختر الفئة أو الباقة أولاً');return;}setState((){paying=true;error=null;});try{final d=await TelecomApiService.topup(phone:number,networkId:networkId,bunchId:id(b),amountYer:price(b));if(mounted)await success(d);}catch(e){if(mounted)setState(()=>error=e.toString());}finally{if(mounted)setState(()=>paying=false);}}
-  Future<void> success(Map<String,dynamic>d)async{await showDialog<void>(context:context,builder:(_)=>AlertDialog(title:const Text('تم إرسال العملية'),content:Text('${d['message']??d['msg']??'تم تنفيذ العملية بنجاح'}\nرقم الطلب: ${d['order_id']??d['orderId']??'—'}'),actions:[TextButton(onPressed:()=>Navigator.pop(context),child:const Text('حسناً'))]));}
-  @override Widget build(BuildContext c){final supports=network?['supports_balance']==true||'${network?['supports_balance']}'=='1';return Scaffold(backgroundColor:AppColors.bg,appBar:AppBar(backgroundColor:AppColors.bg,elevation:0,centerTitle:true,title:Text(widget.categoryName.isEmpty?'كبينة السداد':widget.categoryName,style:const TextStyle(fontSize:18,fontWeight:FontWeight.w800))),body:ListView(padding:const EdgeInsets.fromLTRB(14,8,14,30),children:[hero(),const SizedBox(height:14),Text('رقم الهاتف',textAlign:TextAlign.right,style:TextStyle(color:AppColors.text2,fontSize:13,fontWeight:FontWeight.w700)),const SizedBox(height:7),phoneField(),if(network!=null)...[const SizedBox(height:9),networkCard(supports),if(result!=null)...[const SizedBox(height:12),resultCard(),const SizedBox(height:12),offers()],const SizedBox(height:14),tabs(),if(tab!=null)...[const SizedBox(height:14),if(tab=='amount')amountSection(),if(tab=='fees')grouped('fees'),if(tab=='bundles')grouped('bundles')]],if(selected!=null&&tab!='amount')... [const SizedBox(height:12),selectedCard()],if(error!=null)...[const SizedBox(height:12),errorCard()] ]));}
-  Widget hero()=>Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:AppColors.balanceGradient,borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Container(padding:const EdgeInsets.symmetric(horizontal:10,vertical:6),decoration:BoxDecoration(color:Colors.white.withOpacity(.16),borderRadius:BorderRadius.circular(20)),child:const Row(children:[Icon(Icons.circle,size:7,color:AppColors.green),SizedBox(width:6),Text('متصل',style:TextStyle(color:Colors.white,fontSize:11,fontWeight:FontWeight.w700))])),Container(width:52,height:52,decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:const Icon(Icons.receipt_long_rounded,color:AppColors.primary,size:27))]),const SizedBox(height:14),Text(network==null?'خدمات الاتصالات':'اتصالات ${network?['name']??'يمن موبايل'}',textAlign:TextAlign.right,style:const TextStyle(color:Colors.white,fontSize:19,fontWeight:FontWeight.w900)),const SizedBox(height:3),Text(network==null?'شحن رصيد وخدمات الاتصالات':'تم التعرف على الشبكة تلقائياً برقمك',textAlign:TextAlign.right,style:TextStyle(color:Colors.white.withOpacity(.8),fontSize:12))]));
-  Widget phoneField()=>Stack(children:[TextField(controller:phone,onChanged:changed,keyboardType:TextInputType.phone,textAlign:TextAlign.right,style:TextStyle(color:AppColors.text,fontSize:20,letterSpacing:1.5,fontWeight:FontWeight.w800),decoration:InputDecoration(hintText:'7X XXX XXXX',prefixIcon:const Icon(Icons.phone_android_rounded),contentPadding:const EdgeInsets.only(left:92,right:14,top:15,bottom:15),border:OutlineInputBorder(borderRadius:BorderRadius.circular(18)))),Positioned(left:5,top:5,bottom:5,child:SizedBox(width:80,child:ElevatedButton.icon(onPressed:network==null||checking?null:checkNumber,icon:checking?const SizedBox(width:15,height:15,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):const Icon(Icons.search_rounded,size:17),label:Text(checking?'...':'فحص',style:const TextStyle(fontSize:11,fontWeight:FontWeight.w900)),style:ElevatedButton.styleFrom(padding:EdgeInsets.zero,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(12)))))),if(detecting)const Positioned(right:10,top:0,bottom:0,child:Center(child:SizedBox(width:17,height:17,child:CircularProgressIndicator(strokeWidth:2))))]);
-  Widget panel(Widget child)=>Container(padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:AppColors.card,borderRadius:BorderRadius.circular(18),border:Border.all(color:AppColors.card3)),child:child);
-  Widget networkCard(bool supports)=>panel(Row(children:[Container(width:44,height:44,decoration:BoxDecoration(color:AppColors.primary.withOpacity(.12),borderRadius:BorderRadius.circular(13)),child:const Icon(Icons.sim_card_rounded,color:AppColors.primary)),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.end,children:[Text('${network?['name']??'الشبكة'}',style:TextStyle(color:AppColors.text,fontSize:14,fontWeight:FontWeight.w900)),Text(supports?'شحن الرصيد متاح':'الخدمات المتاحة حسب الشبكة',style:TextStyle(color:AppColors.text2,fontSize:10))])),const Icon(Icons.verified_rounded,color:AppColors.green,size:21)]));
-  Widget stat(String a,String b,Color col)=>Expanded(child:Container(padding:const EdgeInsets.symmetric(horizontal:5,vertical:10),decoration:BoxDecoration(color:col.withOpacity(.08),borderRadius:BorderRadius.circular(13),border:Border.all(color:col.withOpacity(.16))),child:Column(children:[Text(a,textAlign:TextAlign.center,style:TextStyle(color:AppColors.text2,fontSize:9,fontWeight:FontWeight.w700)),const SizedBox(height:4),Text(b,maxLines:2,overflow:TextOverflow.ellipsis,textAlign:TextAlign.center,style:TextStyle(color:col,fontSize:11,fontWeight:FontWeight.w900))])));
-  Widget resultCard(){final d=result??{};final inv=d['invoice']??d['bill']??d['bill_amount']??d['amount_due']??d['due_amount']??0,bal=d['balance']??d['current_balance']??0,loan=d['loan']??d['solfa']??d['debt']??'لا توجد سلفة';return panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[head(Icons.account_balance_rounded,'نتيجة الفحص'),const SizedBox(height:10),Row(children:[stat('مبلغ الفاتورة','$inv ر.ي',AppColors.gold),const SizedBox(width:7),stat('الرصيد','$bal ر.ي',AppColors.green),const SizedBox(width:7),stat('السلفة','$loan',AppColors.cyan)])]));}
-  Widget offers(){final raw=result?['offers']??result?['available_offers']??result?['services'];final xs=raw is List?raw:[];if(xs.isEmpty)return const SizedBox.shrink();final ch=<Widget>[head(Icons.local_offer_rounded,'العروض المتاحة'),const SizedBox(height:9)];for(final x in xs){if(x is Map){final o=Map<String,dynamic>.from(x);ch.add(Container(padding:const EdgeInsets.all(11),margin:const EdgeInsets.only(bottom:7),decoration:BoxDecoration(color:AppColors.card2,borderRadius:BorderRadius.circular(15),border:Border.all(color:AppColors.card3)),child:Row(children:[const Icon(Icons.local_offer_outlined,color:AppColors.gold),const SizedBox(width:9),Expanded(child:Text('${o['name']??o['title']??o['offer_name']??'عرض متاح'}',textAlign:TextAlign.right,style:TextStyle(color:AppColors.text,fontSize:12,fontWeight:FontWeight.w800))),if('${o['price']??o['amount']??''}'.isNotEmpty)Text('${o['price']??o['amount']} ر.ي',style:const TextStyle(color:AppColors.primary,fontWeight:FontWeight.w900))])));}}return panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:ch));}
-  Widget tabs()=>Row(children:[tabButton('شحن رصيد','amount',Icons.account_balance_wallet_rounded),const SizedBox(width:7),tabButton('الفئات والرسوم','fees',Icons.category_rounded),const SizedBox(width:7),tabButton('باقات','bundles',Icons.layers_rounded)]);
-  Widget tabButton(String s,String v,IconData i){final on=tab==v;return Expanded(child:InkWell(onTap:()=>selectTab(v),borderRadius:BorderRadius.circular(17),child:AnimatedContainer(duration:const Duration(milliseconds:160),height:58,decoration:BoxDecoration(color:on?AppColors.primary:AppColors.card,borderRadius:BorderRadius.circular(17),border:Border.all(color:on?AppColors.primary:AppColors.card3)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(i,size:19,color:on?Colors.white:AppColors.text2),const SizedBox(height:3),Text(s,textAlign:TextAlign.center,style:TextStyle(color:on?Colors.white:AppColors.text2,fontSize:9,fontWeight:FontWeight.w800))]))));}
-  Widget head(IconData i,String s)=>Row(children:[Icon(i,color:AppColors.purple,size:20),const SizedBox(width:7),Expanded(child:Text(s,textAlign:TextAlign.right,style:TextStyle(color:AppColors.text,fontSize:15,fontWeight:FontWeight.w900)))]);
-  Widget amountSection()=>Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[head(Icons.account_balance_wallet_rounded,'شحن رصيد'),const SizedBox(height:9),panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Text('أدخل المبلغ الذي تريد شحنه',textAlign:TextAlign.right,style:TextStyle(color:AppColors.text2,fontSize:12)),const SizedBox(height:8),TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),textAlign:TextAlign.center,style:const TextStyle(fontSize:22,fontWeight:FontWeight.w900),decoration:const InputDecoration(hintText:'0',suffixText:'ر.ي',prefixIcon:Icon(Icons.payments_rounded))),const SizedBox(height:10),SizedBox(height:50,child:ElevatedButton.icon(onPressed:paying?null:payAmount,icon:paying?const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):const Icon(Icons.send_rounded),label:Text(paying?'جاري التنفيذ...':'شحن الرصيد')))]))]);
-  Widget grouped(String type){final xs=items(type);if(xs.isEmpty)return panel(Text(type=='fees'?'لا توجد فئات شحن متاحة حالياً':'لا توجد باقات متاحة حالياً',textAlign:TextAlign.right,style:TextStyle(color:AppColors.text2)));final gs=groups(xs,type);final ch=<Widget>[head(type=='fees'?Icons.category_rounded:Icons.layers_rounded,type=='fees'?'الفئات والرسوم':'الباقات'),const SizedBox(height:9)];for(final e in gs.entries){final on=openGroup==e.key;ch.add(InkWell(onTap:()=>setState(()=>openGroup=on?null:e.key),borderRadius:BorderRadius.circular(15),child:Container(padding:const EdgeInsets.symmetric(horizontal:13,vertical:12),decoration:BoxDecoration(color:on?AppColors.primary.withOpacity(.10):AppColors.card,borderRadius:BorderRadius.circular(15),border:Border.all(color:on?AppColors.primary.withOpacity(.35):AppColors.card3)),child:Row(children:[Icon(on?Icons.folder_open_rounded:Icons.folder_rounded,color:AppColors.purple,size:21),const SizedBox(width:9),Expanded(child:Text(e.key,textAlign:TextAlign.right,style:TextStyle(color:AppColors.text,fontSize:12,fontWeight:FontWeight.w800))),Text('${e.value.length}',style:TextStyle(color:AppColors.text2,fontSize:10,fontWeight:FontWeight.w800)),const SizedBox(width:5),Icon(on?Icons.keyboard_arrow_up_rounded:Icons.keyboard_arrow_down_rounded,color:AppColors.text2)]))));if(on){ch.add(const SizedBox(height:8));ch.add(grid(e.value));}ch.add(const SizedBox(height:8));}return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:ch);}
-  Widget grid(List<Map<String,dynamic>> xs){final r=<Widget>[];for(int i=0;i<xs.length;i+=2){r.add(Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Expanded(child:plan(xs[i])),const SizedBox(width:8),Expanded(child:i+1<xs.length?plan(xs[i+1]):const SizedBox())]));if(i+2<xs.length)r.add(const SizedBox(height:8));}return Column(children:r);}
-  Widget plan(Map<String,dynamic>b){final on=selected!=null&&id(selected!)==id(b),v=validity(b);return InkWell(onTap:()=>setState(()=>selected=b),borderRadius:BorderRadius.circular(16),child:Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:on?AppColors.primary.withOpacity(.13):AppColors.card2,borderRadius:BorderRadius.circular(16),border:Border.all(color:on?AppColors.primary:AppColors.card3,width:on?1.5:1)),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(children:[Expanded(child:Text(name(b),maxLines:2,overflow:TextOverflow.ellipsis,textAlign:TextAlign.right,style:TextStyle(color:AppColors.text,fontSize:11,fontWeight:FontWeight.w800))),if(on)const Icon(Icons.check_circle_rounded,color:AppColors.primary,size:18)]),const SizedBox(height:7),Text(priceText(b),textAlign:TextAlign.right,style:const TextStyle(color:AppColors.primary,fontSize:17,fontWeight:FontWeight.w900)),if(v.isNotEmpty)Text(v,textAlign:TextAlign.right,maxLines:2,overflow:TextOverflow.ellipsis,style:TextStyle(color:AppColors.text2,fontSize:9)),const SizedBox(height:8),Container(height:32,alignment:Alignment.center,decoration:BoxDecoration(color:on?AppColors.primary:Colors.transparent,borderRadius:BorderRadius.circular(10),border:Border.all(color:AppColors.primary)),child:Text(on?'تم الاختيار':'اختيار',style:TextStyle(color:on?Colors.white:AppColors.primary,fontSize:10,fontWeight:FontWeight.w900)))])));
-  Widget selectedCard()=>panel(Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Text('الخدمة المختارة',textAlign:TextAlign.right,style:TextStyle(color:AppColors.text2,fontSize:10)),const SizedBox(height:4),Text(name(selected!),textAlign:TextAlign.right,style:TextStyle(color:AppColors.text,fontSize:14,fontWeight:FontWeight.w900)),const SizedBox(height:5),Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text(priceText(selected!),style:const TextStyle(color:AppColors.primary,fontSize:18,fontWeight:FontWeight.w900)),if(validity(selected!).isNotEmpty)Text(validity(selected!),style:TextStyle(color:AppColors.text2,fontSize:10))]),const SizedBox(height:10),SizedBox(height:48,child:ElevatedButton.icon(onPressed:paying?null:paySelected,icon:paying?const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):const Icon(Icons.send_rounded),label:Text(paying?'جاري التنفيذ...':'شحن الآن')))]));
-  Widget errorCard()=>Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:AppColors.red.withOpacity(.08),borderRadius:BorderRadius.circular(14),border:Border.all(color:AppColors.red.withOpacity(.22))),child:Row(children:[const Icon(Icons.error_outline_rounded,color:AppColors.red,size:20),const SizedBox(width:8),Expanded(child:Text(error!,textAlign:TextAlign.right,style:const TextStyle(color:AppColors.red,fontSize:11,fontWeight:FontWeight.w700)))]));
+
+class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
+  final phone = TextEditingController();
+  final amount = TextEditingController();
+  Timer? timer;
+  Map<String, dynamic>? network, result, selected;
+  List<dynamic> bunches = [];
+  String? tab, openGroup, error;
+  bool detecting = false, checking = false, paying = false;
+
+  String get number => phone.text.replaceAll(RegExp(r'[^0-9]'), '');
+  int get networkId => int.tryParse('${network?['id'] ?? network?['method_id'] ?? 0}') ?? 0;
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    phone.dispose();
+    amount.dispose();
+    super.dispose();
+  }
+
+  void changed(String value) {
+    timer?.cancel();
+    setState(() {
+      network = null;
+      result = null;
+      selected = null;
+      bunches = [];
+      tab = null;
+      openGroup = null;
+      error = null;
+    });
+    final p = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (p.length >= 8) {
+      timer = Timer(const Duration(milliseconds: 350), () => detect(p));
+    }
+  }
+
+  Future<void> detect(String p) async {
+    setState(() => detecting = true);
+    try {
+      final d = await TelecomApiService.detectNetwork(p);
+      if (!mounted) return;
+      final x = d['network'];
+      network = x is Map ? Map<String, dynamic>.from(x) : null;
+      if (networkId > 0) {
+        bunches = await TelecomApiService.bunches(networkId);
+      }
+      setState(() {});
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => detecting = false);
+    }
+  }
+
+  Future<void> checkNumber() async {
+    if (number.length < 7 || networkId <= 0) {
+      setState(() => error = 'أدخل رقم الهاتف أولاً');
+      return;
+    }
+    setState(() {
+      checking = true;
+      error = null;
+    });
+    try {
+      final d = await TelecomApiService.checkService(phone: number, networkId: networkId);
+      if (!mounted) return;
+      final x = d['data'];
+      result = x is Map ? Map<String, dynamic>.from(x) : d;
+      setState(() {});
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => checking = false);
+    }
+  }
+
+  void selectTab(String value) {
+    setState(() {
+      tab = tab == value ? null : value;
+      openGroup = null;
+      error = null;
+      if (value == 'amount' || tab == null) selected = null;
+    });
+  }
+
+  double price(Map b) => double.tryParse('${b['price'] ?? b['amount'] ?? 0}') ?? 0;
+  String priceText(Map b) {
+    final p = price(b);
+    return '${p == p.roundToDouble() ? p.toInt() : p} ر.ي';
+  }
+  String name(Map b) => '${b['bunch_name'] ?? b['name'] ?? b['title'] ?? 'خدمة شحن'}';
+  String valid(Map b) => '${b['validity'] ?? b['duration'] ?? b['period'] ?? ''}';
+  String id(Map b) => '${b['unified_code'] ?? b['bunch_id'] ?? b['id'] ?? ''}';
+
+  List<Map<String, dynamic>> items(String type) {
+    final out = <Map<String, dynamic>>[];
+    for (final x in bunches) {
+      if (x is! Map) continue;
+      final b = Map<String, dynamic>.from(x);
+      final s = '${b['section'] ?? ''}';
+      if (type == 'fees' && s == 'fees') out.add(b);
+      if (type == 'bundles' && s != 'fees' && s != 'amount') out.add(b);
+    }
+    return out;
+  }
+
+  Map<String, List<Map<String, dynamic>>> groups(List<Map<String, dynamic>> xs, String type) {
+    final out = <String, List<Map<String, dynamic>>>{};
+    for (final b in xs) {
+      final g = '${b['bundle_group'] ?? ''}'.trim();
+      final s = '${b['section'] ?? ''}';
+      final key = g.isNotEmpty ? g : (type == 'fees' ? 'الفئات والرسوم' : (s.isEmpty ? 'الباقات' : s));
+      out.putIfAbsent(key, () => []).add(b);
+    }
+    return out;
+  }
+
+  Future<void> payAmount() async {
+    final a = double.tryParse(amount.text.replaceAll(',', '').trim()) ?? 0;
+    if (number.length < 7 || networkId <= 0) {
+      setState(() => error = 'رقم الهاتف غير صحيح');
+      return;
+    }
+    if (a <= 0) {
+      setState(() => error = 'أدخل مبلغ الشحن');
+      return;
+    }
+    setState(() {
+      paying = true;
+      error = null;
+    });
+    try {
+      final d = await TelecomApiService.payBalance(phone: number, networkId: networkId, amountYer: a);
+      if (mounted) await success(d);
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => paying = false);
+    }
+  }
+
+  Future<void> paySelected() async {
+    final b = selected;
+    if (b == null || id(b).isEmpty || price(b) <= 0) {
+      setState(() => error = 'اختر الفئة أو الباقة أولاً');
+      return;
+    }
+    setState(() {
+      paying = true;
+      error = null;
+    });
+    try {
+      final d = await TelecomApiService.topup(phone: number, networkId: networkId, bunchId: id(b), amountYer: price(b));
+      if (mounted) await success(d);
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => paying = false);
+    }
+  }
+
+  Future<void> success(Map<String, dynamic> d) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('تم إرسال العملية'),
+        content: Text('${d['message'] ?? d['msg'] ?? 'تم تنفيذ العملية بنجاح'}\nرقم الطلب: ${d['order_id'] ?? d['orderId'] ?? '—'}'),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسناً'))],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final supports = network?['supports_balance'] == true || '${network?['supports_balance']}' == '1';
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: AppColors.bg,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(widget.categoryName.isEmpty ? 'كبينة السداد' : widget.categoryName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
+        children: [
+          hero(),
+          const SizedBox(height: 14),
+          const Text('رقم الهاتف', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2, fontSize: 13, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 7),
+          phoneField(),
+          if (network != null) ...[
+            const SizedBox(height: 9),
+            networkCard(supports),
+            if (result != null) ...[
+              const SizedBox(height: 12),
+              resultCard(),
+              const SizedBox(height: 12),
+              offers(),
+            ],
+            const SizedBox(height: 14),
+            tabs(),
+            if (tab != null) ...[
+              const SizedBox(height: 14),
+              if (tab == 'amount') amountSection(),
+              if (tab == 'fees') grouped('fees'),
+              if (tab == 'bundles') grouped('bundles'),
+            ],
+            if (selected != null && tab != 'amount') ...[
+              const SizedBox(height: 12),
+              selectedCard(),
+            ],
+          ],
+          if (error != null) ...[
+            const SizedBox(height: 12),
+            errorCard(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget hero() => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(gradient: AppColors.balanceGradient, borderRadius: BorderRadius.circular(22)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(color: Colors.white.withOpacity(.16), borderRadius: BorderRadius.circular(20)),
+          child: const Row(children: [Icon(Icons.circle, size: 7, color: AppColors.green), SizedBox(width: 6), Text('متصل', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))]),
+        ),
+        Container(width: 52, height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.receipt_long_rounded, color: AppColors.primary, size: 27)),
+      ]),
+      const SizedBox(height: 14),
+      Text(network == null ? 'خدمات الاتصالات' : 'اتصالات ${network?['name'] ?? 'يمن موبايل'}', textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 3),
+      Text(network == null ? 'شحن رصيد وخدمات الاتصالات' : 'تم التعرف على الشبكة تلقائياً برقمك', textAlign: TextAlign.right, style: TextStyle(color: Colors.white.withOpacity(.8), fontSize: 12)),
+    ]),
+  );
+
+  Widget phoneField() => Stack(children: [
+    TextField(
+      controller: phone,
+      onChanged: changed,
+      keyboardType: TextInputType.phone,
+      textAlign: TextAlign.right,
+      style: const TextStyle(color: AppColors.text, fontSize: 20, letterSpacing: 1.5, fontWeight: FontWeight.w800),
+      decoration: InputDecoration(hintText: '7X XXX XXXX', prefixIcon: const Icon(Icons.phone_android_rounded), contentPadding: const EdgeInsets.only(left: 92, right: 14, top: 15, bottom: 15), border: OutlineInputBorder(borderRadius: BorderRadius.circular(18))),
+    ),
+    Positioned(left: 5, top: 5, bottom: 5, child: SizedBox(width: 80, child: ElevatedButton.icon(
+      onPressed: network == null || checking ? null : checkNumber,
+      icon: checking ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.search_rounded, size: 17),
+      label: Text(checking ? '...' : 'فحص', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+      style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+    ))),
+    if (detecting) const Positioned(right: 10, top: 0, bottom: 0, child: Center(child: SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2)))),
+  ]);
+
+  Widget panel(Widget child) => Container(padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.card3)), child: child);
+
+  Widget networkCard(bool supports) => panel(Row(children: [
+    Container(width: 44, height: 44, decoration: BoxDecoration(color: AppColors.primary.withOpacity(.12), borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.sim_card_rounded, color: AppColors.primary)),
+    const SizedBox(width: 10),
+    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('${network?['name'] ?? 'الشبكة'}', style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w900)), Text(supports ? 'شحن الرصيد متاح' : 'الخدمات المتاحة حسب الشبكة', style: const TextStyle(color: AppColors.text2, fontSize: 10))])),
+    const Icon(Icons.verified_rounded, color: AppColors.green, size: 21),
+  ]));
+
+  Widget stat(String title, String value, Color color) => Expanded(child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+    decoration: BoxDecoration(color: color.withOpacity(.08), borderRadius: BorderRadius.circular(13), border: Border.all(color: color.withOpacity(.16))),
+    child: Column(children: [Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text2, fontSize: 9, fontWeight: FontWeight.w700)), const SizedBox(height: 4), Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900))]),
+  ));
+
+  Widget resultCard() {
+    final d = result ?? {};
+    final inv = d['invoice'] ?? d['bill'] ?? d['bill_amount'] ?? d['amount_due'] ?? d['due_amount'] ?? 0;
+    final bal = d['balance'] ?? d['current_balance'] ?? 0;
+    final loan = d['loan'] ?? d['solfa'] ?? d['debt'] ?? 'لا توجد سلفة';
+    return panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      head(Icons.account_balance_rounded, 'نتيجة الفحص'),
+      const SizedBox(height: 10),
+      Row(children: [stat('مبلغ الفاتورة', '$inv ر.ي', AppColors.gold), const SizedBox(width: 7), stat('الرصيد', '$bal ر.ي', AppColors.green), const SizedBox(width: 7), stat('السلفة', '$loan', AppColors.cyan)]),
+    ]));
+  }
+
+  Widget offers() {
+    final raw = result?['offers'] ?? result?['available_offers'] ?? result?['services'];
+    final xs = raw is List ? raw : <dynamic>[];
+    if (xs.isEmpty) return const SizedBox.shrink();
+    final children = <Widget>[head(Icons.local_offer_rounded, 'العروض المتاحة'), const SizedBox(height: 9)];
+    for (final x in xs) {
+      if (x is! Map) continue;
+      final o = Map<String, dynamic>.from(x);
+      final offerPrice = '${o['price'] ?? o['amount'] ?? ''}';
+      children.add(Container(
+        padding: const EdgeInsets.all(11),
+        margin: const EdgeInsets.only(bottom: 7),
+        decoration: BoxDecoration(color: AppColors.card2, borderRadius: BorderRadius.circular(15), border: Border.all(color: AppColors.card3)),
+        child: Row(children: [
+          const Icon(Icons.local_offer_outlined, color: AppColors.gold), const SizedBox(width: 9),
+          Expanded(child: Text('${o['name'] ?? o['title'] ?? o['offer_name'] ?? 'عرض متاح'}', textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w800))),
+          if (offerPrice.isNotEmpty) Text('$offerPrice ر.ي', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900)),
+        ]),
+      ));
+    }
+    return panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children));
+  }
+
+  Widget tabs() => Row(children: [
+    tabButton('شحن رصيد', 'amount', Icons.account_balance_wallet_rounded), const SizedBox(width: 7),
+    tabButton('الفئات والرسوم', 'fees', Icons.category_rounded), const SizedBox(width: 7),
+    tabButton('باقات', 'bundles', Icons.layers_rounded),
+  ]);
+
+  Widget tabButton(String label, String value, IconData icon) {
+    final on = tab == value;
+    return Expanded(child: InkWell(
+      onTap: () => selectTab(value),
+      borderRadius: BorderRadius.circular(17),
+      child: AnimatedContainer(duration: const Duration(milliseconds: 160), height: 58, decoration: BoxDecoration(color: on ? AppColors.primary : AppColors.card, borderRadius: BorderRadius.circular(17), border: Border.all(color: on ? AppColors.primary : AppColors.card3)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, size: 19, color: on ? Colors.white : AppColors.text2), const SizedBox(height: 3), Text(label, textAlign: TextAlign.center, style: TextStyle(color: on ? Colors.white : AppColors.text2, fontSize: 9, fontWeight: FontWeight.w800))])),
+    );
+  }
+
+  Widget head(IconData icon, String label) => Row(children: [Icon(icon, color: AppColors.purple, size: 20), const SizedBox(width: 7), Expanded(child: Text(label, textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w900)))]);
+
+  Widget amountSection() => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    head(Icons.account_balance_wallet_rounded, 'شحن رصيد'), const SizedBox(height: 9),
+    panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Text('أدخل المبلغ الذي تريد شحنه', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2, fontSize: 12)), const SizedBox(height: 8),
+      TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900), decoration: const InputDecoration(hintText: '0', suffixText: 'ر.ي', prefixIcon: Icon(Icons.payments_rounded))),
+      const SizedBox(height: 10),
+      SizedBox(height: 50, child: ElevatedButton.icon(onPressed: paying ? null : payAmount, icon: paying ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded), label: Text(paying ? 'جاري التنفيذ...' : 'شحن الرصيد'))),
+    ])),
+  ]);
+
+  Widget grouped(String type) {
+    final xs = items(type);
+    if (xs.isEmpty) return panel(Text(type == 'fees' ? 'لا توجد فئات شحن متاحة حالياً' : 'لا توجد باقات متاحة حالياً', textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text2)));
+    final gs = groups(xs, type);
+    final children = <Widget>[head(type == 'fees' ? Icons.category_rounded : Icons.layers_rounded, type == 'fees' ? 'الفئات والرسوم' : 'الباقات'), const SizedBox(height: 9)];
+    for (final entry in gs.entries) {
+      final open = openGroup == entry.key;
+      children.add(InkWell(
+        onTap: () => setState(() => openGroup = open ? null : entry.key),
+        borderRadius: BorderRadius.circular(15),
+        child: Container(padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12), margin: const EdgeInsets.only(bottom: 7), decoration: BoxDecoration(color: open ? AppColors.card2 : AppColors.card3.withOpacity(.55), borderRadius: BorderRadius.circular(15)), child: Row(children: [Expanded(child: Text(entry.key, textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w800))), Text('${entry.value.length}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900)), const SizedBox(width: 8), Icon(open ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: AppColors.text2)])),
+      ));
+      if (open) {
+        for (final b in entry.value) {
+          children.add(InkWell(
+            onTap: () => setState(() => selected = b),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(padding: const EdgeInsets.all(11), margin: const EdgeInsets.only(bottom: 7), decoration: BoxDecoration(color: selected == b ? AppColors.primary.withOpacity(.12) : AppColors.card2, borderRadius: BorderRadius.circular(14), border: Border.all(color: selected == b ? AppColors.primary : AppColors.card3)), child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(name(b), textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w800)), if (valid(b).isNotEmpty) Text(valid(b), style: const TextStyle(color: AppColors.text2, fontSize: 10))])), Text(priceText(b), style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w900))])),
+          ));
+        }
+      }
+    }
+    return panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children));
+  }
+
+  Widget selectedCard() {
+    final b = selected!;
+    return panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      head(Icons.check_circle_rounded, 'الخيار المحدد'), const SizedBox(height: 8),
+      Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(name(b), textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w900)), if (valid(b).isNotEmpty) Text(valid(b), style: const TextStyle(color: AppColors.text2, fontSize: 11))])), Text(priceText(b), style: const TextStyle(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.w900))]),
+      const SizedBox(height: 10),
+      SizedBox(height: 48, child: ElevatedButton.icon(onPressed: paying ? null : paySelected, icon: paying ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded), label: Text(paying ? 'جاري التنفيذ...' : 'تأكيد الشحن'))),
+    ]));
+  }
+
+  Widget errorCard() => Container(
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(color: AppColors.red.withOpacity(.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.red.withOpacity(.25))),
+    child: Row(children: [const Icon(Icons.error_outline_rounded, color: AppColors.red), const SizedBox(width: 8), Expanded(child: Text(error!, textAlign: TextAlign.right, style: const TextStyle(color: AppColors.red, fontSize: 12, fontWeight: FontWeight.w700)))]),
+  );
 }
