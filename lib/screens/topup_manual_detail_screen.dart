@@ -73,8 +73,12 @@ class _TopupManualDetailScreenState extends State<TopupManualDetailScreen> {
       _error = null;
     });
     try {
+      final methodId = int.tryParse(widget.method['id']?.toString() ?? '') ?? 0;
+      if (methodId <= 0) {
+        throw ApiException('وسيلة الدفع غير صحيحة');
+      }
       final data = await ApiService.submitManualTopup(
-        methodId: (widget.method['id'] as num).toInt(),
+        methodId: methodId,
         currencyCode: _selectedRate!['currency_code'].toString(),
         amountSent: amount,
         notes: _notesCtrl.text.trim(),
