@@ -15,14 +15,14 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen>{
   Timer? timer;
   Map<String,dynamic>? network,checkData,selectedBunch;
   List<dynamic> bunches=[];
-  String? error,activeTab;
+  String? error,activeTab,activeBundleGroup;
   bool loading=false,checking=false,paying=false;
 
   @override void dispose(){timer?.cancel();phone.dispose();amount.dispose();super.dispose();}
 
   void changed(String v){
     timer?.cancel();
-    setState((){network=null;bunches=[];checkData=null;selectedBunch=null;activeTab=null;error=null;});
+    setState((){network=null;bunches=[];checkData=null;selectedBunch=null;activeTab=null;activeBundleGroup=null;error=null;});
     final p=v.replaceAll(RegExp(r'[^0-9]'),'');
     if(p.length>=8)timer=Timer(const Duration(milliseconds:350),()=>detect(p));
   }
@@ -54,7 +54,19 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen>{
     finally{if(mounted)setState(()=>checking=false);}
   }
 
-  void selectTab(String v){setState((){activeTab=activeTab==v?null:v;error=null;if(activeTab=='amount'||activeTab==null)selectedBunch=null;});}
+  void selectTab(String v){
+    setState((){
+      activeTab=activeTab==v?null:v;
+      error=null;
+      selectedBunch=null;
+      activeBundleGroup=null;
+    });
+  }
+
+  void selectBundleGroup(String group){
+    setState(()=>activeBundleGroup=activeBundleGroup==group?null:group);
+  }
+
   String money(double v)=>v==v.roundToDouble()?v.toInt().toString():v.toString();
 
   List<Map<String,dynamic>> items(String type){
@@ -66,6 +78,16 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen>{
       if(type=='bundles'&&s!='fees'&&s!='amount')out.add(b);
     }
     return out;
+  }
+
+  Map<String,List<Map<String,dynamic>>> bundleGroups(){
+    final groups=<String,List<Map<String,dynamic>>>{};
+    for(final b in items('bundles')){
+      final group='${b['bundle_group']??''}'.trim();
+      final name=group.isEmpty?'أخرى':group;
+      groups.putIfAbsent(name,()=>[]).add(b);
+    }
+    return groups;
   }
 
   String sectionName(String s){
@@ -121,13 +143,69 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen>{
     switch(activeTab){
       case 'amount':return amountSection();
       case 'fees':return itemsSection('الفئات والرسوم',Icons.category_rounded,items('fees'));
-      case 'bundles':return itemsSection('الباقات',Icons.language_rounded,items('bundles'));
+      case 'bundles':return bundleGroupsSection();
       case 'offers':return offers();
-      default:return Column(children:[amountSection(),const SizedBox(height:18),itemsSection('الفئات والرسوم',Icons.category_rounded,items('fees')),const SizedBox(height:18),itemsSection('الباقات',Icons.language_rounded,items('bundles'))]);
+      default:return Column(children:[amountSection(),const SizedBox(height:18),itemsSection('الفئات والرسوم',Icons.category_rounded,items('fees'))]);
     }
   }
 
   Widget amountSection()=>Column(crossAxisAlignment:CrossAxisAlignment.end,children:[header(Icons.account_balance_wallet_rounded,'شحن الرصيد'),const SizedBox(height:9),panel(Column(crossAxisAlignment:CrossAxisAlignment.end,children:[Text('أدخل المبلغ الذي تريد شحنه',style:TextStyle(color:AppColors.text2,fontSize:12)),const SizedBox(height:8),TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),textAlign:TextAlign.center,style:const TextStyle(fontSize:22,fontWeight:FontWeight.w900),decoration:const InputDecoration(hintText:'0',suffixText:'ر.ي',prefixIcon:Icon(Icons.payments_rounded))),const SizedBox(height:10),SizedBox(width:double.infinity,height:50,child:ElevatedButton.icon(onPressed:paying?null:payAmount,icon:paying?const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2)):const Icon(Icons.send_rounded),label:Text(paying?'جاري التنفيذ...':'شحن الرصيد')))]))]);
+
+  Widget bundleGroupsSection(){
+    final groups=bundleGroups();
+    if(groups.isEmpty)return panel(Text('لا توجد أقسام باقات متاحة حالياً',textAlign:TextAlign.right,style:TextStyle(color:AppColors.text2)));
+    final names=groups.keys.toList();
+    return Column(crossAxisAlignment:CrossAxisAlignment.end,children:[
+      header(Icons.language_rounded,'أقسام الباقات'),
+      const SizedBox(height:9),
+      GridView.builder(
+        shrinkWrap:true,
+        physics:const NeverScrollableScrollPhysics(),
+        itemCount:names.length,
+        gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:9,mainAxisSpacing:9,childAspectRatio:1.55),
+        itemBuilder:(_,i){
+          final name=names[i],selected=activeBundleGroup==name,count=groups[name]!.length;
+          return InkWell(
+            onTap:()=>selectBundleGroup(name),
+            borderRadius:BorderRadius.circular(16),
+            child:AnimatedContainer(
+              duration:const Duration(milliseconds:160),
+              padding:const EdgeInsets.all(12),
+              decoration:BoxDecoration(color:selected?AppColors.primary.withOpacity(.13):AppColors.card,borderRadius:BorderRadius.circular(16),border:Border.all(color:selected?AppColors.primary:AppColors.border,width:selected?1.5:1)),
+              child:Row(children:[
+                if(selected)const Icon(Icons.check_circle_rounded,color:AppColors.primary,size:20),
+                const Spacer(),
+                Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.end,mainAxisAlignment:MainAxisAlignment.center,children:[Text(name,maxLines:2,overflow:TextOverflow.ellipsis,textAlign:TextAlign.right,style:const TextStyle(fontSize:14,fontWeight:FontWeight.w900)),const SizedBox(height:5),Text('$count باقة',style:TextStyle(color:AppColors.text2,fontSize:10))])),
+                const SizedBox(width:8),
+                Icon(selected?Icons.keyboard_arrow_up_rounded:Icons.keyboard_arrow_down_rounded,color:AppColors.primary,size:22),
+              ]),
+            ),
+          );
+        },
+      ),
+      if(activeBundleGroup!=null&&groups.containsKey(activeBundleGroup))...[
+        const SizedBox(height:14),
+        bundleItemsSection(activeBundleGroup!,groups[activeBundleGroup!]!),
+      ],
+    ]);
+  }
+
+  Widget bundleItemsSection(String group,List<Map<String,dynamic>> list){
+    return Column(crossAxisAlignment:CrossAxisAlignment.end,children:[
+      header(Icons.folder_open_rounded,group),
+      const SizedBox(height:9),
+      GridView.builder(
+        shrinkWrap:true,
+        physics:const NeverScrollableScrollPhysics(),
+        itemCount:list.length,
+        gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:9,mainAxisSpacing:9,childAspectRatio:1.13),
+        itemBuilder:(_,i){
+          final b=list[i],price=double.tryParse('${b['price']??0}')??0,name='${b['bunch_name']??b['name']??b['code']??''}'.trim(),sel=selectedBunch!=null&&'${selectedBunch!['id']}'=='${b['id']}';
+          return bunchCard(b,name.isEmpty?'الخدمة':name,price,sel);
+        },
+      ),
+    ]);
+  }
 
   Widget itemsSection(String title,IconData icon,List<Map<String,dynamic>> list){
     if(list.isEmpty)return panel(Text('لا توجد خدمات متاحة حالياً',textAlign:TextAlign.right,style:TextStyle(color:AppColors.text2)));
@@ -152,7 +230,7 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen>{
   Widget tabButton(String text,String value){final s=activeTab==value;return Expanded(child:InkWell(onTap:()=>selectTab(value),borderRadius:BorderRadius.circular(22),child:AnimatedContainer(duration:const Duration(milliseconds:150),alignment:Alignment.center,decoration:BoxDecoration(color:s?AppColors.primary:AppColors.card,borderRadius:BorderRadius.circular(22),border:Border.all(color:s?AppColors.primary:AppColors.border)),child:Text(text,textAlign:TextAlign.center,style:TextStyle(fontSize:9,fontWeight:FontWeight.w800,color:s?Colors.white:AppColors.text2)))));}
   Widget networkCard(bool supports){final logo='${network?['logo']??''}'.trim(),name='${network?['name']??network?['name_ar']??''}';return panel(Row(children:[Icon(supports?Icons.check_circle_rounded:Icons.error_outline,color:supports?AppColors.green:AppColors.red),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.end,children:[Text(name,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900)),const SizedBox(height:3),Text('تم التعرف على الشبكة تلقائياً',style:TextStyle(color:AppColors.text2,fontSize:11))])),const SizedBox(width:10),networkLogo(logo)]));}
   Widget networkLogo(String logo){if(logo.isEmpty)return Container(width:52,height:52,decoration:BoxDecoration(color:AppColors.card2,borderRadius:BorderRadius.circular(12)),child:const Icon(Icons.signal_cellular_alt_rounded,color:AppColors.primary));return Container(width:52,height:52,padding:const EdgeInsets.all(3),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12)),child:Image.network(logo,fit:BoxFit.contain,errorBuilder:(_,__,___)=>const Icon(Icons.sim_card_rounded,color:AppColors.primary)));}
-  Widget hero()=>panel(Row(children:[Container(width:44,height:44,decoration:BoxDecoration(gradient:AppColors.balanceGradient,borderRadius:BorderRadius.circular(13)),child:const Icon(Icons.sim_card_rounded,color:Colors.white)),const Spacer(),Column(crossAxisAlignment:CrossAxisAlignment.end,children:[Text(widget.categoryName.isEmpty?'كبينة السداد':widget.categoryName,style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900)),const SizedBox(height:3),Text('شحن رصيد الاتصالات اليمنية',style:TextStyle(color:AppColors.text2,fontSize:12))])]));
+  Widget hero()=>panel(Row(children:[Container(width:44,height:44,decoration:BoxDecoration(gradient:AppColors.balanceGradient,borderRadius:BorderRadius.circular(13)),child:const Icon(Icons.sim_card_rounded,color:Colors.white)),const Spacer(),Column(crossAxisAlignment:CrossAxisAlignment.end,children:[Text(widget.categoryName.isEmpty?'كبينة السداد':widget.categoryName,style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900)),const SizedBox(height:3),Text('شحن رصيد الاتصالات اليمنية',style:TextStyle(color:AppColors.text2,fontSize:12))])]))
   Widget header(IconData i,String s)=>Row(children:[Icon(i,color:AppColors.purple,size:21),const Spacer(),Text(s,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900))]);
   Widget stat(String t,String v)=>Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:AppColors.card2,borderRadius:BorderRadius.circular(13),border:Border.all(color:AppColors.border)),child:Column(crossAxisAlignment:CrossAxisAlignment.end,children:[Text(t,style:TextStyle(color:AppColors.text2,fontSize:10)),const SizedBox(height:5),Text(v,style:TextStyle(color:AppColors.purple,fontWeight:FontWeight.w900,fontSize:15))]));
   Widget row(String t,String v,[Color? c])=>Padding(padding:const EdgeInsets.symmetric(vertical:7),child:Row(children:[Text(v,style:TextStyle(fontWeight:FontWeight.w800,color:c??AppColors.text)),const Spacer(),Text(t,style:TextStyle(color:AppColors.text2,fontSize:11))]));
