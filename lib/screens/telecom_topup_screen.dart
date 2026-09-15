@@ -303,17 +303,8 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
         return feesSection();
       case 'bundles':
         return bundleGroupsSection();
-      case 'all':
       default:
-        return Column(
-          children: [
-            amountSection(),
-            const SizedBox(height: 18),
-            feesSection(),
-            const SizedBox(height: 18),
-            bundleGroupsSection(),
-          ],
-        );
+        return const SizedBox.shrink();
     }
   }
 
@@ -684,7 +675,8 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
         String name;
         String details = '';
         if (offer is Map) {
-          name = '${offer['offer_name'] ?? offer['name'] ?? offer['offer_id'] ?? 'عرض'}';
+          name =
+              '${offer['offer_name'] ?? offer['name'] ?? offer['offer_id'] ?? 'عرض'}';
           final price = offer['price'] ?? offer['amount'];
           final validity = offer['validity'] ?? offer['duration'];
           if (price != null && '$price'.isNotEmpty) {
@@ -864,8 +856,6 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       height: 45,
       child: Row(
         children: [
-          tabButton('كل الخدمات', 'all'),
-          const SizedBox(width: 5),
           tabButton('شحن رصيد', 'amount'),
           const SizedBox(width: 5),
           tabButton('الفئات والرسوم', 'fees'),
