@@ -7,6 +7,7 @@ class TelecomTopupScreen extends StatefulWidget {
   final int categoryId;
   final String categoryName;
   const TelecomTopupScreen({super.key, required this.categoryId, required this.categoryName});
+
   @override
   State<TelecomTopupScreen> createState() => _TelecomTopupScreenState();
 }
@@ -15,10 +16,16 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
   final phone = TextEditingController();
   final amount = TextEditingController();
   Timer? timer;
-  Map<String, dynamic>? network, result, selected;
+  Map<String, dynamic>? network;
+  Map<String, dynamic>? result;
+  Map<String, dynamic>? selected;
   List<dynamic> bunches = [];
-  String? tab, openGroup, error;
-  bool detecting = false, checking = false, paying = false;
+  String? tab;
+  String? openGroup;
+  String? error;
+  bool detecting = false;
+  bool checking = false;
+  bool paying = false;
 
   String get number => phone.text.replaceAll(RegExp(r'[^0-9]'), '');
   int get networkId => int.tryParse('${network?['id'] ?? network?['method_id'] ?? 0}') ?? 0;
@@ -51,10 +58,10 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
   Future<void> detect(String p) async {
     setState(() => detecting = true);
     try {
-      final d = await TelecomApiService.detectNetwork(p);
+      final data = await TelecomApiService.detectNetwork(p);
       if (!mounted) return;
-      final x = d['network'];
-      network = x is Map ? Map<String, dynamic>.from(x) : null;
+      final value = data['network'];
+      network = value is Map ? Map<String, dynamic>.from(value) : null;
       if (networkId > 0) {
         bunches = await TelecomApiService.bunches(networkId);
       }
@@ -76,10 +83,10 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       error = null;
     });
     try {
-      final d = await TelecomApiService.checkService(phone: number, networkId: networkId);
+      final data = await TelecomApiService.checkService(phone: number, networkId: networkId);
       if (!mounted) return;
-      final x = d['data'];
-      result = x is Map ? Map<String, dynamic>.from(x) : d;
+      final value = data['data'];
+      result = value is Map ? Map<String, dynamic>.from(value) : data;
       setState(() {});
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
@@ -108,34 +115,34 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
 
   List<Map<String, dynamic>> items(String type) {
     final out = <Map<String, dynamic>>[];
-    for (final x in bunches) {
-      if (x is! Map) continue;
-      final b = Map<String, dynamic>.from(x);
-      final s = '${b['section'] ?? ''}';
-      if (type == 'fees' && s == 'fees') out.add(b);
-      if (type == 'bundles' && s != 'fees' && s != 'amount') out.add(b);
+    for (final value in bunches) {
+      if (value is! Map) continue;
+      final b = Map<String, dynamic>.from(value);
+      final section = '${b['section'] ?? ''}';
+      if (type == 'fees' && section == 'fees') out.add(b);
+      if (type == 'bundles' && section != 'fees' && section != 'amount') out.add(b);
     }
     return out;
   }
 
-  Map<String, List<Map<String, dynamic>>> groups(List<Map<String, dynamic>> xs, String type) {
+  Map<String, List<Map<String, dynamic>>> groups(List<Map<String, dynamic>> values, String type) {
     final out = <String, List<Map<String, dynamic>>>{};
-    for (final b in xs) {
-      final g = '${b['bundle_group'] ?? ''}'.trim();
-      final s = '${b['section'] ?? ''}';
-      final key = g.isNotEmpty ? g : (type == 'fees' ? 'الفئات والرسوم' : (s.isEmpty ? 'الباقات' : s));
+    for (final b in values) {
+      final group = '${b['bundle_group'] ?? ''}'.trim();
+      final section = '${b['section'] ?? ''}';
+      final key = group.isNotEmpty ? group : (type == 'fees' ? 'الفئات والرسوم' : (section.isEmpty ? 'الباقات' : section));
       out.putIfAbsent(key, () => []).add(b);
     }
     return out;
   }
 
   Future<void> payAmount() async {
-    final a = double.tryParse(amount.text.replaceAll(',', '').trim()) ?? 0;
+    final value = double.tryParse(amount.text.replaceAll(',', '').trim()) ?? 0;
     if (number.length < 7 || networkId <= 0) {
       setState(() => error = 'رقم الهاتف غير صحيح');
       return;
     }
-    if (a <= 0) {
+    if (value <= 0) {
       setState(() => error = 'أدخل مبلغ الشحن');
       return;
     }
@@ -144,8 +151,8 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       error = null;
     });
     try {
-      final d = await TelecomApiService.payBalance(phone: number, networkId: networkId, amountYer: a);
-      if (mounted) await success(d);
+      final data = await TelecomApiService.payBalance(phone: number, networkId: networkId, amountYer: value);
+      if (mounted) await success(data);
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
     } finally {
@@ -164,8 +171,8 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       error = null;
     });
     try {
-      final d = await TelecomApiService.topup(phone: number, networkId: networkId, bunchId: id(b), amountYer: price(b));
-      if (mounted) await success(d);
+      final data = await TelecomApiService.topup(phone: number, networkId: networkId, bunchId: id(b), amountYer: price(b));
+      if (mounted) await success(data);
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
     } finally {
@@ -173,12 +180,12 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
     }
   }
 
-  Future<void> success(Map<String, dynamic> d) async {
+  Future<void> success(Map<String, dynamic> data) async {
     await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('تم إرسال العملية'),
-        content: Text('${d['message'] ?? d['msg'] ?? 'تم تنفيذ العملية بنجاح'}\nرقم الطلب: ${d['order_id'] ?? d['orderId'] ?? '—'}'),
+        content: Text('${data['message'] ?? data['msg'] ?? 'تم تنفيذ العملية بنجاح'}\nرقم الطلب: ${data['order_id'] ?? data['orderId'] ?? '—'}'),
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسناً'))],
       ),
     );
@@ -200,7 +207,7 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
         children: [
           hero(),
           const SizedBox(height: 14),
-          const Text('رقم الهاتف', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2, fontSize: 13, fontWeight: FontWeight.w700)),
+          Text('رقم الهاتف', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2, fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(height: 7),
           phoneField(),
           if (network != null) ...[
@@ -234,138 +241,223 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
     );
   }
 
-  Widget hero() => Container(
-    padding: const EdgeInsets.all(18),
-    decoration: BoxDecoration(gradient: AppColors.balanceGradient, borderRadius: BorderRadius.circular(22)),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(.16), borderRadius: BorderRadius.circular(20)),
-          child: const Row(children: [Icon(Icons.circle, size: 7, color: AppColors.green), SizedBox(width: 6), Text('متصل', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))]),
-        ),
-        Container(width: 52, height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.receipt_long_rounded, color: AppColors.primary, size: 27)),
+  Widget hero() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(gradient: AppColors.balanceGradient, borderRadius: BorderRadius.circular(22)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(.16), borderRadius: BorderRadius.circular(20)),
+            child: const Row(children: [Icon(Icons.circle, size: 7, color: AppColors.green), SizedBox(width: 6), Text('متصل', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))]),
+          ),
+          Container(width: 52, height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.receipt_long_rounded, color: AppColors.primary, size: 27)),
+        ]),
+        const SizedBox(height: 14),
+        Text(network == null ? 'خدمات الاتصالات' : 'اتصالات ${network?['name'] ?? 'يمن موبايل'}', textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 3),
+        Text(network == null ? 'شحن رصيد وخدمات الاتصالات' : 'تم التعرف على الشبكة تلقائياً برقمك', textAlign: TextAlign.right, style: TextStyle(color: Colors.white.withOpacity(.8), fontSize: 12)),
       ]),
-      const SizedBox(height: 14),
-      Text(network == null ? 'خدمات الاتصالات' : 'اتصالات ${network?['name'] ?? 'يمن موبايل'}', textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 3),
-      Text(network == null ? 'شحن رصيد وخدمات الاتصالات' : 'تم التعرف على الشبكة تلقائياً برقمك', textAlign: TextAlign.right, style: TextStyle(color: Colors.white.withOpacity(.8), fontSize: 12)),
-    ]),
-  );
+    );
+  }
 
-  Widget phoneField() => Stack(children: [
-    TextField(
-      controller: phone,
-      onChanged: changed,
-      keyboardType: TextInputType.phone,
-      textAlign: TextAlign.right,
-      style: const TextStyle(color: AppColors.text, fontSize: 20, letterSpacing: 1.5, fontWeight: FontWeight.w800),
-      decoration: InputDecoration(hintText: '7X XXX XXXX', prefixIcon: const Icon(Icons.phone_android_rounded), contentPadding: const EdgeInsets.only(left: 92, right: 14, top: 15, bottom: 15), border: OutlineInputBorder(borderRadius: BorderRadius.circular(18))),
-    ),
-    Positioned(left: 5, top: 5, bottom: 5, child: SizedBox(width: 80, child: ElevatedButton.icon(
-      onPressed: network == null || checking ? null : checkNumber,
-      icon: checking ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.search_rounded, size: 17),
-      label: Text(checking ? '...' : 'فحص', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
-      style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-    ))),
-    if (detecting) const Positioned(right: 10, top: 0, bottom: 0, child: Center(child: SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2)))),
-  ]);
+  Widget phoneField() {
+    return Stack(children: [
+      TextField(
+        controller: phone,
+        onChanged: changed,
+        keyboardType: TextInputType.phone,
+        textAlign: TextAlign.right,
+        style: TextStyle(color: AppColors.text, fontSize: 20, letterSpacing: 1.5, fontWeight: FontWeight.w800),
+        decoration: InputDecoration(hintText: '7X XXX XXXX', prefixIcon: Icon(Icons.phone_android_rounded), contentPadding: const EdgeInsets.only(left: 92, right: 14, top: 15, bottom: 15), border: OutlineInputBorder(borderRadius: BorderRadius.circular(18))),
+      ),
+      Positioned(
+        left: 5,
+        top: 5,
+        bottom: 5,
+        child: SizedBox(
+          width: 80,
+          child: ElevatedButton.icon(
+            onPressed: network == null || checking ? null : checkNumber,
+            icon: checking ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.search_rounded, size: 17),
+            label: Text(checking ? '...' : 'فحص', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+            style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+          ),
+        ),
+      ),
+      if (detecting) const Positioned(right: 10, top: 0, bottom: 0, child: Center(child: SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2)))),
+    ]);
+  }
 
-  Widget panel(Widget child) => Container(padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.card3)), child: child);
+  Widget panel(Widget child) {
+    return Container(
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.card3)),
+      child: child,
+    );
+  }
 
-  Widget networkCard(bool supports) => panel(Row(children: [
-    Container(width: 44, height: 44, decoration: BoxDecoration(color: AppColors.primary.withOpacity(.12), borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.sim_card_rounded, color: AppColors.primary)),
-    const SizedBox(width: 10),
-    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text('${network?['name'] ?? 'الشبكة'}', style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w900)), Text(supports ? 'شحن الرصيد متاح' : 'الخدمات المتاحة حسب الشبكة', style: const TextStyle(color: AppColors.text2, fontSize: 10))])),
-    const Icon(Icons.verified_rounded, color: AppColors.green, size: 21),
-  ]));
+  Widget networkCard(bool supports) {
+    return panel(Row(children: [
+      Container(width: 44, height: 44, decoration: BoxDecoration(color: AppColors.primary.withOpacity(.12), borderRadius: BorderRadius.circular(13)), child: Icon(Icons.sim_card_rounded, color: AppColors.primary)),
+      const SizedBox(width: 10),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        Text('${network?['name'] ?? 'الشبكة'}', style: TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w900)),
+        Text(supports ? 'شحن الرصيد متاح' : 'الخدمات المتاحة حسب الشبكة', style: TextStyle(color: AppColors.text2, fontSize: 10)),
+      ])),
+      Icon(Icons.verified_rounded, color: AppColors.green, size: 21),
+    ]));
+  }
 
-  Widget stat(String title, String value, Color color) => Expanded(child: Container(
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-    decoration: BoxDecoration(color: color.withOpacity(.08), borderRadius: BorderRadius.circular(13), border: Border.all(color: color.withOpacity(.16))),
-    child: Column(children: [Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text2, fontSize: 9, fontWeight: FontWeight.w700)), const SizedBox(height: 4), Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900))]),
-  ));
+  Widget stat(String title, String value, Color color) {
+    return Expanded(child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+      decoration: BoxDecoration(color: color.withOpacity(.08), borderRadius: BorderRadius.circular(13), border: Border.all(color: color.withOpacity(.16))),
+      child: Column(children: [
+        Text(title, textAlign: TextAlign.center, style: TextStyle(color: AppColors.text2, fontSize: 9, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        Text(value, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900)),
+      ]),
+    ));
+  }
 
   Widget resultCard() {
     final d = result ?? {};
-    final inv = d['invoice'] ?? d['bill'] ?? d['bill_amount'] ?? d['amount_due'] ?? d['due_amount'] ?? 0;
-    final bal = d['balance'] ?? d['current_balance'] ?? 0;
+    final invoice = d['invoice'] ?? d['bill'] ?? d['bill_amount'] ?? d['amount_due'] ?? d['due_amount'] ?? 0;
+    final balance = d['balance'] ?? d['current_balance'] ?? 0;
     final loan = d['loan'] ?? d['solfa'] ?? d['debt'] ?? 'لا توجد سلفة';
     return panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       head(Icons.account_balance_rounded, 'نتيجة الفحص'),
       const SizedBox(height: 10),
-      Row(children: [stat('مبلغ الفاتورة', '$inv ر.ي', AppColors.gold), const SizedBox(width: 7), stat('الرصيد', '$bal ر.ي', AppColors.green), const SizedBox(width: 7), stat('السلفة', '$loan', AppColors.cyan)]),
+      Row(children: [
+        stat('مبلغ الفاتورة', '$invoice ر.ي', AppColors.gold),
+        const SizedBox(width: 7),
+        stat('الرصيد', '$balance ر.ي', AppColors.green),
+        const SizedBox(width: 7),
+        stat('السلفة', '$loan', AppColors.cyan),
+      ]),
     ]));
   }
 
   Widget offers() {
     final raw = result?['offers'] ?? result?['available_offers'] ?? result?['services'];
-    final xs = raw is List ? raw : <dynamic>[];
-    if (xs.isEmpty) return const SizedBox.shrink();
+    final values = raw is List ? raw : <dynamic>[];
+    if (values.isEmpty) return const SizedBox.shrink();
     final children = <Widget>[head(Icons.local_offer_rounded, 'العروض المتاحة'), const SizedBox(height: 9)];
-    for (final x in xs) {
-      if (x is! Map) continue;
-      final o = Map<String, dynamic>.from(x);
-      final offerPrice = '${o['price'] ?? o['amount'] ?? ''}';
+    for (final value in values) {
+      if (value is! Map) continue;
+      final offer = Map<String, dynamic>.from(value);
+      final offerPrice = '${offer['price'] ?? offer['amount'] ?? ''}';
       children.add(Container(
         padding: const EdgeInsets.all(11),
         margin: const EdgeInsets.only(bottom: 7),
         decoration: BoxDecoration(color: AppColors.card2, borderRadius: BorderRadius.circular(15), border: Border.all(color: AppColors.card3)),
         child: Row(children: [
-          const Icon(Icons.local_offer_outlined, color: AppColors.gold), const SizedBox(width: 9),
-          Expanded(child: Text('${o['name'] ?? o['title'] ?? o['offer_name'] ?? 'عرض متاح'}', textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w800))),
-          if (offerPrice.isNotEmpty) Text('$offerPrice ر.ي', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900)),
+          Icon(Icons.local_offer_outlined, color: AppColors.gold),
+          const SizedBox(width: 9),
+          Expanded(child: Text('${offer['name'] ?? offer['title'] ?? offer['offer_name'] ?? 'عرض متاح'}', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w800))),
+          if (offerPrice.isNotEmpty) Text('$offerPrice ر.ي', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900)),
         ]),
       ));
     }
     return panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children));
   }
 
-  Widget tabs() => Row(children: [
-    tabButton('شحن رصيد', 'amount', Icons.account_balance_wallet_rounded), const SizedBox(width: 7),
-    tabButton('الفئات والرسوم', 'fees', Icons.category_rounded), const SizedBox(width: 7),
-    tabButton('باقات', 'bundles', Icons.layers_rounded),
-  ]);
+  Widget tabs() {
+    return Row(children: [
+      tabButton('شحن رصيد', 'amount', Icons.account_balance_wallet_rounded),
+      const SizedBox(width: 7),
+      tabButton('الفئات والرسوم', 'fees', Icons.category_rounded),
+      const SizedBox(width: 7),
+      tabButton('باقات', 'bundles', Icons.layers_rounded),
+    ]);
+  }
 
   Widget tabButton(String label, String value, IconData icon) {
-    final on = tab == value;
-    return Expanded(child: InkWell(
-      onTap: () => selectTab(value),
-      borderRadius: BorderRadius.circular(17),
-      child: AnimatedContainer(duration: const Duration(milliseconds: 160), height: 58, decoration: BoxDecoration(color: on ? AppColors.primary : AppColors.card, borderRadius: BorderRadius.circular(17), border: Border.all(color: on ? AppColors.primary : AppColors.card3)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, size: 19, color: on ? Colors.white : AppColors.text2), const SizedBox(height: 3), Text(label, textAlign: TextAlign.center, style: TextStyle(color: on ? Colors.white : AppColors.text2, fontSize: 9, fontWeight: FontWeight.w800))])),
+    final active = tab == value;
+    return Expanded(
+      child: InkWell(
+        onTap: () => selectTab(value),
+        borderRadius: BorderRadius.circular(17),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          height: 58,
+          decoration: BoxDecoration(color: active ? AppColors.primary : AppColors.card, borderRadius: BorderRadius.circular(17), border: Border.all(color: active ? AppColors.primary : AppColors.card3)),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(icon, size: 19, color: active ? Colors.white : AppColors.text2),
+            const SizedBox(height: 3),
+            Text(label, textAlign: TextAlign.center, style: TextStyle(color: active ? Colors.white : AppColors.text2, fontSize: 9, fontWeight: FontWeight.w800)),
+          ]),
+        ),
+      ),
     );
   }
 
-  Widget head(IconData icon, String label) => Row(children: [Icon(icon, color: AppColors.purple, size: 20), const SizedBox(width: 7), Expanded(child: Text(label, textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w900)))]);
+  Widget head(IconData icon, String label) {
+    return Row(children: [
+      Icon(icon, color: AppColors.purple, size: 20),
+      const SizedBox(width: 7),
+      Expanded(child: Text(label, textAlign: TextAlign.right, style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w900))),
+    ]);
+  }
 
-  Widget amountSection() => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-    head(Icons.account_balance_wallet_rounded, 'شحن رصيد'), const SizedBox(height: 9),
-    panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Text('أدخل المبلغ الذي تريد شحنه', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2, fontSize: 12)), const SizedBox(height: 8),
-      TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900), decoration: const InputDecoration(hintText: '0', suffixText: 'ر.ي', prefixIcon: Icon(Icons.payments_rounded))),
-      const SizedBox(height: 10),
-      SizedBox(height: 50, child: ElevatedButton.icon(onPressed: paying ? null : payAmount, icon: paying ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded), label: Text(paying ? 'جاري التنفيذ...' : 'شحن الرصيد'))),
-    ])),
-  ]);
+  Widget amountSection() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      head(Icons.account_balance_wallet_rounded, 'شحن رصيد'),
+      const SizedBox(height: 9),
+      panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('أدخل المبلغ الذي تريد شحنه', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2, fontSize: 12)),
+        const SizedBox(height: 8),
+        TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), textAlign: TextAlign.center, style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.w900), decoration: InputDecoration(hintText: '0', suffixText: 'ر.ي', prefixIcon: Icon(Icons.payments_rounded))),
+        const SizedBox(height: 10),
+        SizedBox(height: 50, child: ElevatedButton.icon(onPressed: paying ? null : payAmount, icon: paying ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded), label: Text(paying ? 'جاري التنفيذ...' : 'شحن الرصيد'))),
+      ])),
+    ]);
+  }
 
   Widget grouped(String type) {
-    final xs = items(type);
-    if (xs.isEmpty) return panel(Text(type == 'fees' ? 'لا توجد فئات شحن متاحة حالياً' : 'لا توجد باقات متاحة حالياً', textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text2)));
-    final gs = groups(xs, type);
+    final values = items(type);
+    if (values.isEmpty) {
+      return panel(Text(type == 'fees' ? 'لا توجد فئات شحن متاحة حالياً' : 'لا توجد باقات متاحة حالياً', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2)));
+    }
+    final map = groups(values, type);
     final children = <Widget>[head(type == 'fees' ? Icons.category_rounded : Icons.layers_rounded, type == 'fees' ? 'الفئات والرسوم' : 'الباقات'), const SizedBox(height: 9)];
-    for (final entry in gs.entries) {
+    for (final entry in map.entries) {
       final open = openGroup == entry.key;
       children.add(InkWell(
         onTap: () => setState(() => openGroup = open ? null : entry.key),
         borderRadius: BorderRadius.circular(15),
-        child: Container(padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12), margin: const EdgeInsets.only(bottom: 7), decoration: BoxDecoration(color: open ? AppColors.card2 : AppColors.card3.withOpacity(.55), borderRadius: BorderRadius.circular(15)), child: Row(children: [Expanded(child: Text(entry.key, textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w800))), Text('${entry.value.length}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900)), const SizedBox(width: 8), Icon(open ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: AppColors.text2)])),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+          margin: const EdgeInsets.only(bottom: 7),
+          decoration: BoxDecoration(color: open ? AppColors.card2 : AppColors.card3.withOpacity(.55), borderRadius: BorderRadius.circular(15)),
+          child: Row(children: [
+            Expanded(child: Text(entry.key, textAlign: TextAlign.right, style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w800))),
+            Text('${entry.value.length}', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900)),
+            const SizedBox(width: 8),
+            Icon(open ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: AppColors.text2),
+          ]),
+        ),
       ));
       if (open) {
         for (final b in entry.value) {
+          final isSelected = selected == b;
           children.add(InkWell(
             onTap: () => setState(() => selected = b),
             borderRadius: BorderRadius.circular(14),
-            child: Container(padding: const EdgeInsets.all(11), margin: const EdgeInsets.only(bottom: 7), decoration: BoxDecoration(color: selected == b ? AppColors.primary.withOpacity(.12) : AppColors.card2, borderRadius: BorderRadius.circular(14), border: Border.all(color: selected == b ? AppColors.primary : AppColors.card3)), child: Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(name(b), textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w800)), if (valid(b).isNotEmpty) Text(valid(b), style: const TextStyle(color: AppColors.text2, fontSize: 10))])), Text(priceText(b), style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w900))])),
+            child: Container(
+              padding: const EdgeInsets.all(11),
+              margin: const EdgeInsets.only(bottom: 7),
+              decoration: BoxDecoration(color: isSelected ? AppColors.primary.withOpacity(.12) : AppColors.card2, borderRadius: BorderRadius.circular(14), border: Border.all(color: isSelected ? AppColors.primary : AppColors.card3)),
+              child: Row(children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  Text(name(b), textAlign: TextAlign.right, style: TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.w800)),
+                  if (valid(b).isNotEmpty) Text(valid(b), style: TextStyle(color: AppColors.text2, fontSize: 10)),
+                ])),
+                Text(priceText(b), style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w900)),
+              ]),
+            ),
           ));
         }
       }
@@ -376,16 +468,29 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
   Widget selectedCard() {
     final b = selected!;
     return panel(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      head(Icons.check_circle_rounded, 'الخيار المحدد'), const SizedBox(height: 8),
-      Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [Text(name(b), textAlign: TextAlign.right, style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w900)), if (valid(b).isNotEmpty) Text(valid(b), style: const TextStyle(color: AppColors.text2, fontSize: 11))])), Text(priceText(b), style: const TextStyle(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.w900))]),
+      head(Icons.check_circle_rounded, 'الخيار المحدد'),
+      const SizedBox(height: 8),
+      Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text(name(b), textAlign: TextAlign.right, style: TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.w900)),
+          if (valid(b).isNotEmpty) Text(valid(b), style: TextStyle(color: AppColors.text2, fontSize: 11)),
+        ])),
+        Text(priceText(b), style: TextStyle(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.w900)),
+      ]),
       const SizedBox(height: 10),
       SizedBox(height: 48, child: ElevatedButton.icon(onPressed: paying ? null : paySelected, icon: paying ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded), label: Text(paying ? 'جاري التنفيذ...' : 'تأكيد الشحن'))),
     ]));
   }
 
-  Widget errorCard() => Container(
-    padding: const EdgeInsets.all(13),
-    decoration: BoxDecoration(color: AppColors.red.withOpacity(.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.red.withOpacity(.25))),
-    child: Row(children: [const Icon(Icons.error_outline_rounded, color: AppColors.red), const SizedBox(width: 8), Expanded(child: Text(error!, textAlign: TextAlign.right, style: const TextStyle(color: AppColors.red, fontSize: 12, fontWeight: FontWeight.w700)))]),
-  );
+  Widget errorCard() {
+    return Container(
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(color: AppColors.red.withOpacity(.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.red.withOpacity(.25))),
+      child: Row(children: [
+        Icon(Icons.error_outline_rounded, color: AppColors.red),
+        const SizedBox(width: 8),
+        Expanded(child: Text(error ?? '', textAlign: TextAlign.right, style: TextStyle(color: AppColors.red, fontSize: 12, fontWeight: FontWeight.w700))),
+      ]),
+    );
+  }
 }
