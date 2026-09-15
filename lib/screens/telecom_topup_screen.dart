@@ -269,8 +269,6 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
           if (network != null) ...[
             const SizedBox(height: 8),
             networkCard(supports),
-            const SizedBox(height: 12),
-            checkButton(),
             if (checkData != null) ...[
               const SizedBox(height: 12),
               checkResult(),
@@ -553,6 +551,8 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
     double price,
     bool selected,
   ) {
+    final validity = '${b['validity'] ?? b['duration'] ?? ''}'.trim();
+
     return InkWell(
       onTap: () => setState(() => selectedBunch = b),
       borderRadius: BorderRadius.circular(16),
@@ -601,6 +601,15 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
                 '${money(price)} ر.ي',
                 style: TextStyle(color: AppColors.text2, fontSize: 11),
               ),
+            if (validity.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                validity,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: AppColors.text2, fontSize: 10),
+              ),
+            ],
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
@@ -631,56 +640,58 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
 
   Widget checkResult() {
     final d = checkData ?? <String, dynamic>{};
-    final rawOffers = d['offers'];
+    final nested = d['data'];
+    final source = nested is Map ? Map<String, dynamic>.from(nested) : d;
+    final rawOffers = source['offers'] ?? d['offers'];
+    final invoice = source['invoice'] ??
+        source['bill'] ??
+        source['bill_amount'] ??
+        source['amount_due'] ??
+        source['due_amount'];
+
     final children = <Widget>[
-      header(Icons.fact_check_rounded, 'نتيجة الفحص'),
+      header(Icons.fact_check_rounded, 'تفاصيل الفحص'),
       const SizedBox(height: 10),
       Row(
         children: [
           Expanded(
             child: stat(
               'الرصيد',
-              d['balance'] == null ? '—' : '${d['balance']} ر.ي',
+              source['balance'] == null ? '—' : '${source['balance']} ر.ي',
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 7),
           Expanded(
             child: stat(
               'السلفة',
-              d['loan'] == null ? '0 ر.ي' : '${d['loan']} ر.ي',
+              source['loan'] == null ? '0 ر.ي' : '${source['loan']} ر.ي',
+            ),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: stat(
+              'مبلغ الفاتورة',
+              invoice == null ? '0 ر.ي' : '$invoice ر.ي',
             ),
           ),
         ],
       ),
-      const SizedBox(height: 12),
-      Row(
-        children: [
-          const Icon(
-            Icons.local_offer_rounded,
-            color: AppColors.purple,
-            size: 20,
-          ),
-          const Spacer(),
-          const Text(
-            'العروض والباقات المتاحة',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 14),
+      header(Icons.local_offer_rounded, 'العروض والباقات المتاحة'),
+      const SizedBox(height: 9),
     ];
 
     if (rawOffers is List && rawOffers.isNotEmpty) {
       for (final offer in rawOffers) {
-        String name;
+        String name = 'عرض';
         String details = '';
+
         if (offer is Map) {
-          name =
-              '${offer['offer_name'] ?? offer['name'] ?? offer['offer_id'] ?? 'عرض'}';
+          name = '${offer['offer_name'] ?? offer['name'] ?? offer['offer_id'] ?? 'عرض'}';
           final price = offer['price'] ?? offer['amount'];
           final validity = offer['validity'] ?? offer['duration'];
           if (price != null && '$price'.isNotEmpty) {
-            details = '${price} ر.ي';
+            details = '$price ر.ي';
           }
           if (validity != null && '$validity'.isNotEmpty) {
             details = details.isEmpty ? '$validity' : '$details • $validity';
@@ -798,56 +809,77 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
   }
 
   Widget phoneField() {
-    return TextField(
-      controller: phone,
-      onChanged: changed,
-      keyboardType: TextInputType.phone,
-      textAlign: TextAlign.center,
-      style: const TextStyle(
-        fontSize: 20,
-        letterSpacing: 2,
-        fontWeight: FontWeight.w700,
-      ),
-      decoration: InputDecoration(
-        hintText: '7X XXX XXXX',
-        prefixIcon: const Icon(Icons.phone_android_rounded),
-        suffixIcon: loading
-            ? const Padding(
-                padding: EdgeInsets.all(14),
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            : IconButton(
-                onPressed: () {
-                  phone.clear();
-                  changed('');
-                },
-                icon: const Icon(Icons.clear_rounded),
-              ),
-      ),
-    );
-  }
-
-  Widget checkButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: ElevatedButton.icon(
-        onPressed: checking ? null : checkNumber,
-        icon: checking
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.search_rounded),
-        label: Text(
-          checking ? 'جاري الفحص...' : 'فحص الرصيد والسلفة والباقات',
+    return Stack(
+      children: [
+        TextField(
+          controller: phone,
+          onChanged: changed,
+          keyboardType: TextInputType.phone,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 20,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w700,
+          ),
+          decoration: const InputDecoration(
+            hintText: '7X XXX XXXX',
+            prefixIcon: Icon(Icons.phone_android_rounded),
+            contentPadding: EdgeInsets.only(
+              left: 88,
+              right: 14,
+              top: 15,
+              bottom: 15,
+            ),
+          ),
         ),
-      ),
+        Positioned(
+          left: 5,
+          top: 5,
+          bottom: 5,
+          child: SizedBox(
+            width: 78,
+            child: ElevatedButton.icon(
+              onPressed: (network == null || checking) ? null : checkNumber,
+              icon: checking
+                  ? const SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.search_rounded, size: 17),
+              label: Text(
+                checking ? '...' : 'فحص',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(11),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (loading)
+          const Positioned(
+            right: 10,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: SizedBox(
+                width: 17,
+                height: 17,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1027,7 +1059,7 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
 
   Widget stat(String titleText, String value) {
     return Container(
-      padding: const EdgeInsets.all(11),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.card2,
         borderRadius: BorderRadius.circular(13),
@@ -1038,15 +1070,19 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
         children: [
           Text(
             titleText,
-            style: TextStyle(color: AppColors.text2, fontSize: 10),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: AppColors.text2, fontSize: 9),
           ),
           const SizedBox(height: 5),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: AppColors.purple,
               fontWeight: FontWeight.w900,
-              fontSize: 15,
+              fontSize: 13,
             ),
           ),
         ],
