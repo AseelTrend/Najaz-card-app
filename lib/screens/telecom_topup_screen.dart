@@ -6,7 +6,6 @@ import '../theme/app_colors.dart';
 class TelecomTopupScreen extends StatefulWidget {
   final int categoryId;
   final String categoryName;
-
   const TelecomTopupScreen({super.key, required this.categoryId, required this.categoryName});
 
   @override
@@ -24,6 +23,9 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
   bool loading = false, checking = false, paying = false;
   String? error;
 
+  // لا يتم عرض أي فئة أو باقة عند فتح الشاشة حتى يختار المستخدم القسم المطلوب.
+  String? activeTab;
+
   @override
   void dispose() {
     timer?.cancel();
@@ -39,6 +41,7 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       bunches = [];
       checkData = null;
       selectedBunch = null;
+      activeTab = null;
       error = null;
     });
     final p = value.replaceAll(RegExp(r'[^0-9]'), '');
@@ -116,6 +119,21 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
     return groups.entries.toList();
   }
 
+  bool _isAmountSection(String section) => section == 'amount' || section == 'fees';
+  bool _isBundleSection(String section) => section != 'amount' && section != 'fees';
+
+  List<Map<String, dynamic>> _itemsForTab(String tab) {
+    final result = <Map<String, dynamic>>[];
+    for (final item in bunches) {
+      if (item is! Map) continue;
+      final b = Map<String, dynamic>.from(item);
+      final section = '${b['section'] ?? 'bundles'}';
+      if (tab == 'amount' && _isAmountSection(section)) result.add(b);
+      if (tab == 'bundles' && _isBundleSection(section)) result.add(b);
+    }
+    return result;
+  }
+
   Future<void> submit() async {
     final p = phone.text.replaceAll(RegExp(r'[^0-9]'), '');
     final n = int.tryParse('${network?['id'] ?? 0}') ?? 0;
@@ -148,6 +166,10 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
   @override
   Widget build(BuildContext context) {
     final supports = network?['supports_balance'] == true || '${network?['supports_balance']}' == '1';
+    final showOffers = activeTab == 'offers';
+    final showAmount = activeTab == 'amount' || activeTab == 'all';
+    final showBundles = activeTab == 'bundles' || activeTab == 'all';
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -188,12 +210,16 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
               ),
             ),
           ],
-          if (checkData != null) _checkCard(),
+          if (checkData != null && activeTab == 'offers') _checkCard(),
           if (bunches.isNotEmpty) ...[
             const SizedBox(height: 18),
             _serviceTabs(),
-            const SizedBox(height: 18),
-            ...groupedBunches().map((g) => _bunchSection(g.key, g.value)),
+            if (activeTab != null) ...[
+              const SizedBox(height: 18),
+              if (showOffers) _offersSection(),
+              if (showAmount) ...groupedBunches().where((g) => _isAmountSection(g.key)).map((g) => _bunchSection(g.key, g.value)),
+              if (showBundles) ...groupedBunches().where((g) => _isBundleSection(g.key)).map((g) => _bunchSection(g.key, g.value)),
+            ],
           ],
           if (selectedBunch != null) _detailsCard(),
           const SizedBox(height: 8),
@@ -205,25 +231,19 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
 
   Widget _panel({required Widget child, EdgeInsets padding = const EdgeInsets.all(14)}) => Container(
         padding: padding,
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border),
-        ),
+        decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
         child: child,
       );
 
   Widget _heroCard() => _panel(
         padding: const EdgeInsets.fromLTRB(18, 16, 18, 15),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Row(children: [
-            Container(width: 44, height: 44, decoration: BoxDecoration(gradient: AppColors.balanceGradient, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.sim_card_rounded, color: Colors.white)),
-            const Spacer(),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(widget.categoryName.isEmpty ? 'كبينة السداد' : widget.categoryName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 3),
-              Text('شحن رصيد الاتصالات اليمنية', style: TextStyle(color: AppColors.text2, fontSize: 12)),
-            ]),
+        child: Row(children: [
+          Container(width: 44, height: 44, decoration: BoxDecoration(gradient: AppColors.balanceGradient, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.sim_card_rounded, color: Colors.white)),
+          const Spacer(),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text(widget.categoryName.isEmpty ? 'كبينة السداد' : widget.categoryName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 3),
+            Text('شحن رصيد الاتصالات اليمنية', style: TextStyle(color: AppColors.text2, fontSize: 12)),
           ]),
         ]),
       );
@@ -257,11 +277,7 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       padding: const EdgeInsets.only(top: 12),
       child: _panel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Row(children: [
-            Icon(Icons.account_balance_wallet_rounded, color: AppColors.purple, size: 19),
-            const Spacer(),
-            const Text('معلومات الرقم', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
-          ]),
+          Row(children: [Icon(Icons.account_balance_wallet_rounded, color: AppColors.purple, size: 19), const Spacer(), const Text('معلومات الرقم', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900))]),
           const SizedBox(height: 10),
           Row(children: [
             Expanded(child: _stat('الرصيد الحالي', balance == null ? '—' : '$balance ر.ي', AppColors.purple, Icons.account_balance_wallet_rounded)),
@@ -279,6 +295,14 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
     );
   }
 
+  Widget _offersSection() {
+    final offers = checkData?['offers'];
+    if (offers is! List || offers.isEmpty) {
+      return _panel(child: Text(checkData == null ? 'اضغط على زر الفحص لإظهار العروض المتاحة' : 'لا توجد عروض متاحة لهذا الرقم', textAlign: TextAlign.right, style: TextStyle(color: AppColors.text2)));
+    }
+    return _checkCard();
+  }
+
   Widget _stat(String title, String value, Color valueColor, IconData icon) => Container(
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(color: AppColors.card2, borderRadius: BorderRadius.circular(13), border: Border.all(color: AppColors.border)),
@@ -290,31 +314,44 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       );
 
   Widget _serviceTabs() => SizedBox(
-        height: 43,
+        height: 44,
         child: Row(children: [
-          _tab('كل الخدمات', true),
-          const SizedBox(width: 7),
-          _tab('شحن رصيد', false),
-          const SizedBox(width: 7),
-          _tab('باقات', false),
-          const SizedBox(width: 7),
-          _tab('عروض', false),
+          _tab('كل الخدمات', 'all'),
+          const SizedBox(width: 6),
+          _tab('شحن رصيد', 'amount'),
+          const SizedBox(width: 6),
+          _tab('باقات', 'bundles'),
+          const SizedBox(width: 6),
+          _tab('عروض', 'offers'),
         ]),
       );
 
-  Widget _tab(String label, bool selected) => Expanded(child: Container(alignment: Alignment.center, decoration: BoxDecoration(color: selected ? AppColors.primary : AppColors.card, borderRadius: BorderRadius.circular(22), border: Border.all(color: selected ? AppColors.primary : AppColors.border)), child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.text2))));
+  Widget _tab(String label, String value) {
+    final selected = activeTab == value;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () => setState(() {
+          activeTab = selected ? null : value;
+          if (activeTab != 'offers') checkData = activeTab == null ? checkData : checkData;
+        }),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: selected ? AppColors.primary : AppColors.card, borderRadius: BorderRadius.circular(22), border: Border.all(color: selected ? AppColors.primary : AppColors.border)),
+          child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.text2)),
+        ),
+      ),
+    );
+  }
 
   Widget _bunchSection(String section, List<Map<String, dynamic>> items) {
     final title = _sectionName(section);
-    final icon = section == 'amount' ? Icons.account_balance_wallet_rounded : Icons.language_rounded;
+    final icon = _isAmountSection(section) ? Icons.account_balance_wallet_rounded : Icons.language_rounded;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Row(children: [
-          Icon(icon, color: AppColors.purple, size: 21),
-          const Spacer(),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-        ]),
+        Row(children: [Icon(icon, color: AppColors.purple, size: 21), const Spacer(), Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900))]),
         const SizedBox(height: 9),
         GridView.builder(
           shrinkWrap: true,
@@ -345,7 +382,7 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
             const Spacer(),
             if (price > 0) Text('${_number(price)} ر.ي', style: TextStyle(color: AppColors.text2, fontSize: 11)),
             const SizedBox(height: 8),
-            SizedBox(width: double.infinity, height: 36, child: OutlinedButton(onPressed: () => chooseBunch(b), style: OutlinedButton.styleFrom(side: BorderSide(color: selected ? AppColors.primary : AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: EdgeInsets.zero), child: Text(selected ? 'تم الاختيار' : 'اختيار', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800))))
+            SizedBox(width: double.infinity, height: 36, child: OutlinedButton(onPressed: () => chooseBunch(b), style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: EdgeInsets.zero), child: Text(selected ? 'تم الاختيار' : 'اختيار', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800))))
           ]),
         ),
       );
@@ -359,11 +396,7 @@ class _TelecomTopupScreenState extends State<TelecomTopupScreen> {
       padding: const EdgeInsets.only(top: 3),
       child: _panel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Row(children: [
-            Icon(Icons.settings_rounded, color: AppColors.text2, size: 19),
-            const Spacer(),
-            const Text('تفاصيل العملية', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-          ]),
+          Row(children: [Icon(Icons.settings_rounded, color: AppColors.text2, size: 19), const Spacer(), const Text('تفاصيل العملية', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800))]),
           const SizedBox(height: 10),
           if (logo.isNotEmpty) Align(alignment: Alignment.centerRight, child: _networkLogo(logo)),
           _detailRow('الخدمة', name),
