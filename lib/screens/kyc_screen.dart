@@ -99,14 +99,15 @@ class _KycScreenState extends State<KycScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final kycStatus = _kyc?['status']?.toString().trim().toLowerCase() ?? '';
     return Scaffold(appBar: AppBar(title: const Text('تحقق الهوية'), centerTitle: true), body: _loading ? const Center(child: CircularProgressIndicator(color: AppColors.primary)) : RefreshIndicator(onRefresh: _load, color: AppColors.primary, child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 30), children: [
       if (_kyc != null) _statusCard(),
-      if (_kyc == null || _kyc?['status'] == 'rejected') ...[_intro(), const SizedBox(height: 14), _progress(), const SizedBox(height: 18), Form(key: _formKey, child: _stepBody()), const SizedBox(height: 18), _actions()]
+      if (_kyc == null || kycStatus == 'rejected') ...[_intro(), const SizedBox(height: 14), _progress(), const SizedBox(height: 18), Form(key: _formKey, child: _stepBody()), const SizedBox(height: 18), _actions()]
     ])));
   }
 
   Widget _statusCard() {
-    final s = _kyc?['status']?.toString() ?? '';
+    final s = _kyc?['status']?.toString().trim().toLowerCase() ?? '';
     if (s == 'approved') return _card(AppColors.green, Icons.verified_rounded, 'تم التحقق من هويتك', 'تم اعتماد بيانات هويتك بنجاح.', [if ((_kyc?['full_name'] ?? '').toString().isNotEmpty) 'الاسم: ${_kyc!['full_name']}', 'نوع الهوية: ${_labelType(_kyc!['id_type']?.toString() ?? 'national')}', if ((_kyc?['reviewed_at'] ?? '').toString().isNotEmpty) 'تاريخ الاعتماد: ${_kyc!['reviewed_at']}']);
     if (s == 'pending') return _card(AppColors.gold, Icons.hourglass_top_rounded, 'طلبك قيد المراجعة', 'تم استلام طلب التحقق وسيتم مراجعته خلال 24 ساعة. يرجى الانتظار حتى انتهاء المراجعة.', []);
     return _card(AppColors.red, Icons.cancel_rounded, 'تم رفض طلبك السابق', (_kyc?['admin_note'] ?? 'يمكنك تصحيح البيانات وإعادة تقديم الطلب.').toString(), []);
