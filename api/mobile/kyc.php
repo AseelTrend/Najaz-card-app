@@ -1,16 +1,67 @@
 <?php
-/** Mobile KYC endpoint: status + submit. Uses the same kyc_requests schema as the website. */
+/** Mobile KYC endpoint: status + submit + authenticated diagnostic check. */
 require_once __DIR__ . '/_common.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $userId = mobileAuthorizeRequest($pdo, true);
 
 function kycOut(bool $ok, string $msg, array $extra = []): void {
-    echo json_encode(array_merge(['ok' => $ok, 'msg' => $msg], $extra), JSON_UNESCAPED_UNICODE);
+    echo json_encode(array_merge(['ok' => $ok, 'msg' => $msg], $extra), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'status';
+
+/* Authenticated diagnostic: shows exactly what the mobile API sees for this account. */
+if ($action === 'check') {
+    try {
+        $tableExists = false;
+        $tableCheck = $pdo->query("SHOW TABLES LIKE 'kyc_requests'");
+        $tableExists = (bool)$tableCheck->fetchColumn();
+
+        $rows = [];
+        if ($tableExists) {
+            $st = $pdo->prepare("SELECT id,id_type,full_name,national_id,birth_date,birth_place,issue_date,expiry_date,image_front,image_back,extra_fields,status,admin_note,reviewed_by,reviewed_at,created_at,updated_at FROM kyc_requests WHERE user_id=? ORDER BY id DESC LIMIT 10");
+            $st->execute([$userId]);
+            $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($rows as &$row) {
+                if (!empty($row['extra_fields'])) {
+                    $decoded = json_decode($row['extra_fields'], true);
+                    $row['extra_fields'] = is_array($decoded) ? $decoded : [];
+                } else {
+                    $row['extra_fields'] = [];
+                }
+            }
+            unset($row);
+        }
+
+        $latest = $rows[0] ?? null;
+        kycOut(true, 'تم فحص التحقق بنجاح', [
+            'diagnostic' => [
+                'authenticated' => true,
+                'user_id' => (int)$userId,
+                'pdo_connected' => true,
+                'kyc_table_exists' => $tableExists,
+                'requests_count' => count($rows),
+                'latest_status' => $latest['status'] ?? null,
+                'latest_kyc_id' => isset($latest['id']) ? (int)$latest['id'] : null,
+                'latest_reviewed_at' => $latest['reviewed_at'] ?? null,
+            ],
+            'kyc' => $latest,
+            'kyc_requests' => $rows,
+        ]);
+    } catch (Throwable $e) {
+        http_response_code(500);
+        kycOut(false, 'حدث خطأ أثناء فحص التحقق', [
+            'diagnostic' => [
+                'authenticated' => true,
+                'user_id' => (int)$userId,
+                'pdo_connected' => true,
+            ],
+            'error' => $e->getMessage(),
+        ]);
+    }
+}
 
 if ($action === 'status') {
     $st = $pdo->prepare("SELECT id,id_type,full_name,national_id,birth_date,birth_place,issue_date,expiry_date,image_front,image_back,extra_fields,status,admin_note,reviewed_at,created_at,updated_at FROM kyc_requests WHERE user_id=? ORDER BY id DESC LIMIT 1");
