@@ -24,11 +24,23 @@ class QuizApiService {
     }
   }
 
+  static String _message(Map<String, dynamic> data, String fallback) {
+    return data['message']?.toString()
+            ?? data['msg']?.toString()
+            ?? data['error']?.toString()
+            ?? fallback;
+  }
+
   static Future<Map<String, dynamic>> getActive() async {
     final res = await http.get(_uri('active'), headers: await _headers());
     final data = _decode(res.bodyBytes);
     if (data['ok'] != true) {
-      throw QuizApiException(data['error']?.toString() == 'no_active' ? 'لا توجد مسابقة نشطة حالياً' : (data['message']?.toString() ?? data['error']?.toString() ?? 'تعذر تحميل المسابقة'), data);
+      throw QuizApiException(
+        data['error']?.toString() == 'no_active'
+            ? 'لا توجد مسابقة نشطة حالياً'
+            : _message(data, 'تعذر تحميل المسابقة'),
+        data,
+      );
     }
     return data;
   }
@@ -49,7 +61,10 @@ class QuizApiService {
     );
     final data = _decode(res.bodyBytes);
     if (data['ok'] != true) {
-      throw QuizApiException(data['message']?.toString() ?? data['error']?.toString() ?? 'تعذر إرسال المشاركة', data);
+      throw QuizApiException(
+        _message(data, 'تعذر إرسال المشاركة'),
+        data,
+      );
     }
     return data;
   }
