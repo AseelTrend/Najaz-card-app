@@ -6,6 +6,7 @@ import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
 import 'kyc_screen.dart';
 import 'privacy_policy_screen.dart';
+import 'quiz_screen.dart';
 import 'settings_screen.dart';
 import 'topup_screen.dart';
 import 'wallet_screen.dart';
@@ -98,7 +99,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: RefreshIndicator(onRefresh: () => _load(manual: true), color: AppColors.primary, backgroundColor: AppColors.card, child: _loading ? const Center(child: CircularProgressIndicator(color: AppColors.primary)) : ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 28), children: [
         if (_error != null) _messageBox(_error!, AppColors.gold),
         _profileCard(), const SizedBox(height: 18),
-        _kycCard(), const SizedBox(height: 18),
+        _kycCard(), const SizedBox(height: 12),
+        _quizCard(), const SizedBox(height: 18),
         _sectionTitle('إعدادات التطبيق والتفضيلات'), _settingsCard(), const SizedBox(height: 10), _settingsNavRow(), const SizedBox(height: 18),
         _sectionTitle('المعلومات والدعم الفني'), _infoCard(), const SizedBox(height: 20),
         OutlinedButton.icon(onPressed: _confirmLogout, icon: const Icon(Icons.logout_rounded), label: const Text('تسجيل الخروج من الحساب'), style: OutlinedButton.styleFrom(foregroundColor: AppColors.red, side: BorderSide(color: AppColors.red.withOpacity(.35)), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
@@ -140,6 +142,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ]))));
   }
 
+  Widget _quizCard() => Container(
+        decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuizScreen())),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(children: [
+              Container(width: 42, height: 42, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.gold.withOpacity(.15), borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.emoji_events_rounded, color: AppColors.gold, size: 22)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('المسابقات', style: TextStyle(color: AppColors.text, fontSize: 13, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 3),
+                Text('شارك في المسابقات المتاحة واحصل على نتيجتك', style: TextStyle(color: AppColors.text2, fontSize: 10.5, height: 1.4)),
+              ])),
+              Icon(Icons.chevron_left_rounded, color: AppColors.text2, size: 20),
+            ]),
+          ),
+        ),
+      );
+
   Widget _settingsCard() => Container(decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)), child: Column(children: [
     _settingRow(icon: _darkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded, iconColor: AppColors.primary, title: 'الوضع الليلي (الداكن)', subtitle: 'مظهر التطبيق الليلي المريح للعين', trailing: Switch.adaptive(value: _darkMode, activeColor: AppColors.primary, onChanged: (v) { setState(() => _darkMode = v); AppColors.setDark(v); _saveSetting('dark_mode', '$v', v ? 'تم تفعيل الوضع الداكن' : 'تم تفعيل الوضع الفاتح'); })),
     _divider(),
@@ -148,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _settingRow(icon: Icons.language_rounded, iconColor: AppColors.cyan, title: 'لغة الواجهة', subtitle: 'اختر لغة العرض الأساسية', trailing: DropdownButton<String>(value: _language, underline: const SizedBox.shrink(), dropdownColor: AppColors.card2, style: TextStyle(color: AppColors.text, fontSize: 12, fontWeight: FontWeight.bold), items: const [DropdownMenuItem(value: 'ar', child: Text('العربية')), DropdownMenuItem(value: 'en', child: Text('English'))], onChanged: (value) { if (value == null) return; setState(() => _language = value); _saveSetting('language', value, value == 'ar' ? 'تم اختيار اللغة العربية' : 'Language set to English'); })),
   ]));
 
-  Widget _settingsNavRow() => Container(decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)), child: InkWell(borderRadius: BorderRadius.circular(20), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())), child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.gold.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.settings_rounded, color: AppColors.gold, size: 18)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('الإعدادات', style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text('المنطقة الزمنية والأجهزة المصرّحة بالدخول', style: TextStyle(color: AppColors.text2, fontSize: 10.5))])), Icon(Icons.chevron_left_rounded, color: AppColors.text2, size: 20)]))));
+  Widget _settingsNavRow() => Container(decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)), child: InkWell(borderRadius: BorderRadius.circular(20), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())), child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: AppColors.gold.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.settings_rounded, color: AppColors.gold, size: 18)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('الإعدادات', style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text('المنطقة الزمنية والأجهزة المصرّح بها بالدخول', style: TextStyle(color: AppColors.text2, fontSize: 10.5))])), Icon(Icons.chevron_left_rounded, color: AppColors.text2, size: 20)]))));
 
   Widget _settingRow({required IconData icon, required Color iconColor, required String title, required String subtitle, required Widget trailing}) => Padding(padding: const EdgeInsets.all(14), child: Row(children: [Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(color: iconColor.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: iconColor, size: 18)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(color: AppColors.text, fontSize: 12.5, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text(subtitle, style: TextStyle(color: AppColors.text2, fontSize: 10.5))])), const SizedBox(width: 8), trailing]));
 
