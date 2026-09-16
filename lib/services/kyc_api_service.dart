@@ -28,8 +28,29 @@ class KycApiService {
   static Future<Map<String, dynamic>> getStatus() async {
     final res = await http.get(_uri('status'), headers: await _headers());
     final data = _decode(res.bodyBytes);
-    if (data['ok'] != true) throw Exception(data['msg']?.toString() ?? 'تعذر جلب حالة التحقق');
-    return data['kyc'] as Map<String, dynamic>? ?? {};
+    if (data['ok'] != true) {
+      throw Exception(data['msg']?.toString() ?? data['message']?.toString() ?? 'تعذر جلب حالة التحقق');
+    }
+
+    // يدعم شكل الاستجابة الحالي سواء كانت الحالة داخل kyc أو مباشرة في الرد.
+    final kyc = data['kyc'];
+    if (kyc is Map<String, dynamic>) return kyc;
+
+    if (data.containsKey('status')) {
+      return {
+        'status': data['status'],
+        if (data.containsKey('reviewed_at')) 'reviewed_at': data['reviewed_at'],
+      };
+    }
+
+    final nestedData = data['data'];
+    if (nestedData is Map<String, dynamic>) {
+      final nestedKyc = nestedData['kyc'];
+      if (nestedKyc is Map<String, dynamic>) return nestedKyc;
+      if (nestedData.containsKey('status')) return {'status': nestedData['status']};
+    }
+
+    return {};
   }
 
   static Future<Map<String, dynamic>> submit({
