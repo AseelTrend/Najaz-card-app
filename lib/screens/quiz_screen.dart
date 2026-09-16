@@ -34,10 +34,20 @@ class _QuizScreenState extends State<QuizScreen> {
       _error = null;
     });
     try {
-      final kyc = await KycApiService.getStatus();
-      final status = kyc['status']?.toString().trim().toLowerCase() ?? '';
-      final verified = status == 'approved';
+      // تحميل المسابقة بشكل مستقل عن حالة التوثيق؛
+      // فشل فحص KYC لا يجب أن يمنع ظهور المسابقة.
       final data = await QuizApiService.getActive();
+
+      bool verified = false;
+      try {
+        final kyc = await KycApiService.getStatus();
+        final status = kyc['status']?.toString().trim().toLowerCase() ?? '';
+        verified = status == 'approved';
+      } catch (_) {
+        // عند تعذر جلب حالة التوثيق، تبقى المشاركة محمية من السيرفر.
+        verified = false;
+      }
+
       if (!mounted) return;
       setState(() {
         _verified = verified;
