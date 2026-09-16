@@ -5,7 +5,11 @@ import '../config.dart';
 import 'storage_service.dart';
 
 class KycApiService {
-  static Uri _uri(String action) => Uri.parse('${ApiConfig.baseUrl}/kyc.php').replace(queryParameters: {'action': action});
+  static Uri _uri([String? action]) {
+    final base = Uri.parse('${ApiConfig.baseUrl}/kyc.php');
+    if (action == null || action.isEmpty) return base;
+    return base.replace(queryParameters: {'action': action});
+  }
 
   static Future<Map<String, String>> _headers() async {
     final token = await StorageService.getToken();
@@ -26,13 +30,24 @@ class KycApiService {
   }
 
   static Future<Map<String, dynamic>> getStatus() async {
-    final res = await http.get(_uri('status'), headers: await _headers());
-    final data = _decode(res.bodyBytes);
+    final headers = await _headers();
+
+    // السيرفر الحالي يجعل status هو الإجراء الافتراضي عند عدم إرسال action.
+    // استخدام الرابط الأساسي هنا يتوافق أيضاً مع النسخ المنشورة التي لا تتعامل
+    // مع query parameter في طلب حالة التوثيق.
+    var res = await http.get(_uri(), headers: headers);
+    var data = _decode(res.bodyBytes);
+
+    // توافق إضافي مع النسخ التي تشترط action=status.
+    if (data['ok'] != true && data['msg']?.toString() == 'طلب غير صالح') {
+      res = await http.get(_uri('status'), headers: headers);
+      data = _decode(res.bodyBytes);
+    }
+
     if (data['ok'] != true) {
       throw Exception(data['msg']?.toString() ?? data['message']?.toString() ?? 'تعذر جلب حالة التحقق');
     }
 
-    // يدعم شكل الاستجابة الحالي سواء كانت الحالة داخل kyc أو مباشرة في الرد.
     final kyc = data['kyc'];
     if (kyc is Map<String, dynamic>) return kyc;
 
@@ -40,6 +55,8 @@ class KycApiService {
       return {
         'status': data['status'],
         if (data.containsKey('reviewed_at')) 'reviewed_at': data['reviewed_at'],
+        if (data.containsKey('full_name')) 'full_name': data['full_name'],
+        if (data.containsKey('id_type')) 'id_type': data['id_type'],
       };
     }
 
@@ -80,7 +97,7 @@ class KycApiService {
     final streamed = await request.send();
     final res = await http.Response.fromStream(streamed);
     final data = _decode(res.bodyBytes);
-    if (data['ok'] != true) throw Exception(data['msg']?.toString() ?? 'تعذر إرسال طلب التحقق');
+    if (data['ok'] != true) throw Exception(data['msg']?.toString() ?? data['message']?.toString() ?? 'تعذر إرسال طلب التحقق');
     return data;
   }
 }
