@@ -1,123 +1,30 @@
 <?php
-/** Mobile KYC endpoint: status + submit. DEBUG VERSION - مؤقت للتشخيص. */
+/** Mobile KYC endpoint: status + submit. Uses the same kyc_requests schema as the website. */
+require_once __DIR__ . '/_common.php';
+header('Content-Type: application/json; charset=utf-8');
 
-$kycDebugLog = __DIR__ . '/kyc_debug.log';
+$userId = mobileAuthorizeRequest($pdo, true);
 
-function kycDebug(string $step, array $data = []): void
-{
-    global $kycDebugLog;
-    $entry = ['time' => date('Y-m-d H:i:s'), 'step' => $step, 'data' => $data];
-    @file_put_contents($kycDebugLog, json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL, FILE_APPEND | LOCK_EX);
-}
-
-kycDebug('REQUEST_START', [
-    'method' => $_SERVER['REQUEST_METHOD'] ?? null,
-    'uri' => $_SERVER['REQUEST_URI'] ?? null,
-    'action_get' => $_GET['action'] ?? null,
-    'action_post' => $_POST['action'] ?? null,
-    'authorization_exists' => !empty($_SERVER['HTTP_AUTHORIZATION']),
-    'content_type' => $_SERVER['CONTENT_TYPE'] ?? null,
-]);
-
-register_shutdown_function(function (): void {
-    $error = error_get_last();
-    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
-        kycDebug('PHP_FATAL_ERROR', [
-            'type' => $error['type'],
-            'message' => $error['message'],
-            'file' => $error['file'],
-            'line' => $error['line'],
-        ]);
-    }
-});
-
-try {
-    require_once __DIR__ . '/_common.php';
-    kycDebug('COMMON_LOADED', [
-        'pdo_exists' => isset($pdo),
-        'pdo_class' => isset($pdo) && is_object($pdo) ? get_class($pdo) : null,
-    ]);
-
-    header('Content-Type: application/json; charset=utf-8');
-
-    $userId = mobileAuthorizeRequest($pdo, true);
-    kycDebug('AUTH_SUCCESS', ['user_id' => $userId]);
-} catch (Throwable $e) {
-    kycDebug('AUTH_OR_COMMON_ERROR', [
-        'type' => get_class($e),
-        'message' => $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-    ]);
-    throw $e;
-}
-
-function kycOut(bool $ok, string $msg, array $extra = []): void
-{
-    kycDebug('RESPONSE', [
-        'ok' => $ok,
-        'msg' => $msg,
-        'extra_keys' => array_keys($extra),
-    ]);
+function kycOut(bool $ok, string $msg, array $extra = []): void {
     echo json_encode(array_merge(['ok' => $ok, 'msg' => $msg], $extra), JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? 'status';
-kycDebug('ACTION_RESOLVED', [
-    'action' => $action,
-    'method' => $_SERVER['REQUEST_METHOD'] ?? null,
-]);
 
 if ($action === 'status') {
-    kycDebug('STATUS_QUERY_START', ['user_id' => $userId]);
-
-    try {
-        $st = $pdo->prepare("SELECT id,id_type,full_name,national_id,birth_date,birth_place,issue_date,expiry_date,image_front,image_back,extra_fields,status,admin_note,reviewed_at,created_at,updated_at FROM kyc_requests WHERE user_id=? ORDER BY id DESC LIMIT 1");
-        $st->execute([$userId]);
-        $row = $st->fetch(PDO::FETCH_ASSOC);
-
-        kycDebug('STATUS_QUERY_RESULT', [
-            'found' => (bool)$row,
-            'kyc_id' => $row['id'] ?? null,
-            'status' => $row['status'] ?? null,
-            'id_type' => $row['id_type'] ?? null,
-            'reviewed_at' => $row['reviewed_at'] ?? null,
-        ]);
-    } catch (Throwable $e) {
-        kycDebug('STATUS_QUERY_ERROR', [
-            'type' => get_class($e),
-            'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-        ]);
-        kycOut(false, 'خطأ في استعلام التحقق');
-    }
-
+    $st = $pdo->prepare("SELECT id,id_type,full_name,national_id,birth_date,birth_place,issue_date,expiry_date,image_front,image_back,extra_fields,status,admin_note,reviewed_at,created_at,updated_at FROM kyc_requests WHERE user_id=? ORDER BY id DESC LIMIT 1");
+    $st->execute([$userId]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
     if (!$row) kycOut(true, 'لا يوجد طلب تحقق', ['kyc' => null, 'status' => null]);
-
     if (!empty($row['extra_fields'])) {
         $decoded = json_decode($row['extra_fields'], true);
         $row['extra_fields'] = is_array($decoded) ? $decoded : [];
-    } else {
-        $row['extra_fields'] = [];
-    }
-
+    } else $row['extra_fields'] = [];
     kycOut(true, 'تم جلب حالة التحقق', ['kyc' => $row, 'status' => $row['status']]);
 }
 
-if ($action !== 'submit' || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    kycDebug('INVALID_REQUEST', [
-        'action' => $action,
-        'method' => $_SERVER['REQUEST_METHOD'] ?? null,
-    ]);
-    kycOut(false, 'طلب غير صالح');
-}
-
-kycDebug('SUBMIT_START', [
-    'user_id' => $userId,
-    'id_type' => $_POST['id_type'] ?? null,
-]);
+if ($action !== 'submit' || $_SERVER['REQUEST_METHOD'] !== 'POST') kycOut(false, 'طلب غير صالح');
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS `kyc_requests` (
   `id` INT AUTO_INCREMENT PRIMARY KEY, `user_id` INT NOT NULL,
@@ -134,13 +41,6 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `kyc_requests` (
 $existing = $pdo->prepare("SELECT id,status FROM kyc_requests WHERE user_id=? ORDER BY id DESC LIMIT 1");
 $existing->execute([$userId]);
 $ex = $existing->fetch(PDO::FETCH_ASSOC);
-
-kycDebug('EXISTING_KYC', [
-    'found' => (bool)$ex,
-    'kyc_id' => $ex['id'] ?? null,
-    'status' => $ex['status'] ?? null,
-]);
-
 if ($ex && in_array($ex['status'], ['pending','approved'], true)) {
     kycOut(false, $ex['status'] === 'approved' ? 'تم التحقق من هويتك مسبقاً ✅' : 'طلبك قيد المراجعة، يرجى الانتظار ⏳');
 }
@@ -189,20 +89,10 @@ if ($ex && $ex['status'] === 'rejected') $pdo->prepare("DELETE FROM kyc_requests
 $pdo->prepare("INSERT INTO kyc_requests (user_id,id_type,full_name,national_id,birth_date,birth_place,issue_date,expiry_date,image_front,image_back,extra_fields) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
     ->execute([$userId,$idType,$fullName,$nationalId,$birthDate ?: null,$birthPlace,$issueDate ?: null,$expiryDate ?: null,$imgFront,$imgBack,!empty($extra) ? json_encode($extra, JSON_UNESCAPED_UNICODE) : null]);
 
-kycDebug('SUBMIT_INSERTED', [
-    'user_id' => $userId,
-    'id_type' => $idType,
-]);
-
 try {
     $user = getUser();
     $pdo->prepare("INSERT INTO notifications (user_id,type,title,message,icon) SELECT id,'kyc','طلب تحقق هوية جديد',?,'fas fa-id-card' FROM users WHERE role IN ('admin','staff') LIMIT 5")
         ->execute(['طلب تحقق هوية جديد من العميل: ' . ($user['username'] ?? $userId)]);
-} catch (Throwable $e) {
-    kycDebug('NOTIFICATION_ERROR', [
-        'type' => get_class($e),
-        'message' => $e->getMessage(),
-    ]);
-}
+} catch (Throwable $e) {}
 
 kycOut(true, 'تم إرسال طلبك بنجاح! سيتم مراجعته خلال 24 ساعة 🎉', ['status' => 'pending']);
