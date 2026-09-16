@@ -26,6 +26,7 @@ class _KycScreenState extends State<KycScreen> {
   Map<String, dynamic>? _kyc;
   bool _loading = true;
   bool _submitting = false;
+  String? _loadError;
   int _step = 0;
 
   final _types = const [
@@ -41,11 +42,21 @@ class _KycScreenState extends State<KycScreen> {
   void dispose() { _name.dispose(); _id.dispose(); _birthPlace.dispose(); _issue.dispose(); _expiry.dispose(); super.dispose(); }
 
   Future<void> _load() async {
-    try { final k = await KycApiService.getStatus(); if (mounted) setState(() => _kyc = k.isEmpty ? null : k); }
-    catch (_) {} finally { if (mounted) setState(() => _loading = false); }
+    if (mounted) setState(() { _loading = true; _loadError = null; });
+    try {
+      final k = await KycApiService.getStatus();
+      if (!mounted) return;
+      final status = k['status']?.toString().trim().toLowerCase() ?? '';
+      setState(() {
+        _kyc = k.isEmpty ? null : k;
+        if (status == 'approved') _step = 0;
+      });
+    } catch (e) {
+      if (mounted) setState(() => _loadError = e.toString().replaceFirst('Exception: ', ''));
+    } finally { if (mounted) setState(() => _loading = false); }
   }
 
-  String _labelType(String value) => _types.firstWhere((e) => e.$1 == value).$2;
+  String _labelType(String value) => _types.firstWhere((e) => e.$1 == value, orElse: () => _types.first).$2;
   String _fmt(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   Future<void> _date(bool birth) async {
@@ -101,10 +112,13 @@ class _KycScreenState extends State<KycScreen> {
   Widget build(BuildContext context) {
     final kycStatus = _kyc?['status']?.toString().trim().toLowerCase() ?? '';
     return Scaffold(appBar: AppBar(title: const Text('تحقق الهوية'), centerTitle: true), body: _loading ? const Center(child: CircularProgressIndicator(color: AppColors.primary)) : RefreshIndicator(onRefresh: _load, color: AppColors.primary, child: ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 30), children: [
+      if (_loadError != null) _errorCard(),
       if (_kyc != null) _statusCard(),
-      if (_kyc == null || kycStatus == 'rejected') ...[_intro(), const SizedBox(height: 14), _progress(), const SizedBox(height: 18), Form(key: _formKey, child: _stepBody()), const SizedBox(height: 18), _actions()]
+      if (_loadError == null && (_kyc == null || kycStatus == 'rejected')) ...[_intro(), const SizedBox(height: 14), _progress(), const SizedBox(height: 18), Form(key: _formKey, child: _stepBody()), const SizedBox(height: 18), _actions()]
     ])));
   }
+
+  Widget _errorCard() => Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppColors.red.withOpacity(.09), borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.red.withOpacity(.28))), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Text('تعذر جلب حالة التوثيق', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w900)), const SizedBox(height: 7), Text(_loadError ?? 'تعذر الاتصال بالسيرفر', style: TextStyle(color: AppColors.text2, fontSize: 12)), const SizedBox(height: 10), OutlinedButton(onPressed: _load, child: const Text('إعادة المحاولة'))]));
 
   Widget _statusCard() {
     final s = _kyc?['status']?.toString().trim().toLowerCase() ?? '';
@@ -133,5 +147,5 @@ class _KycScreenState extends State<KycScreen> {
   Widget _imagesStep() => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const Text('صور الهوية', style: TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 10), _imageBox(true, _front, 'صورة الوجه الأمامي', true), if (_type != 'passport') ...[const SizedBox(height: 12), _imageBox(false, _back, 'صورة الوجه الخلفي', true)]]);
   Widget _imageBox(bool front, File? file, String title, bool required) => InkWell(onTap: () => _chooseImage(front), borderRadius: BorderRadius.circular(18), child: Container(height: 170, decoration: BoxDecoration(color: AppColors.bg2, borderRadius: BorderRadius.circular(18), border: Border.all(color: file != null ? AppColors.green : AppColors.border)), clipBehavior: Clip.antiAlias, child: file == null ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo_rounded, color: AppColors.primary, size: 34), const SizedBox(height: 8), Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)), const SizedBox(height: 4), Text(required ? 'مطلوبة • كاميرا أو معرض' : 'اختياري', style: TextStyle(color: AppColors.text2, fontSize: 10))]) : Stack(fit: StackFit.expand, children: [Image.file(file, fit: BoxFit.cover), Positioned(right: 10, top: 10, child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.edit_rounded, color: Colors.white, size: 17)))])));
 
-  Widget _actions() => Row(children: [if (_step > 0) Expanded(child: OutlinedButton(onPressed: _submitting ? null : _backStep, child: const Text('السابق'))), if (_step > 0) const SizedBox(width: 10), Expanded(flex: 2, child: FilledButton.icon(onPressed: _submitting ? null : (_step == 2 ? _submit : _next), icon: _submitting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Icon(_step == 2 ? Icons.send_rounded : Icons.arrow_back_rounded, size: 17), label: Text(_step == 2 ? 'إرسال طلب التحقق' : 'التالي')))]);
+  Widget _actions() => Row(children: [if (_step > 0) Expanded(child: OutlinedButton(onPressed: _submitting ? null : _backStep, child: const Text('السابق'))), if (_step > 0) const SizedBox(width: 10), Expanded(flex: 2, child: FilledButton.icon(onPressed: _submitting ? null : (_step == 2 ? _submit : _next), icon: _submitting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(_step == 2 ? Icons.send_rounded : Icons.arrow_forward_rounded), label: Text(_step == 2 ? 'إرسال طلب التحقق' : 'التالي')))]);
 }
